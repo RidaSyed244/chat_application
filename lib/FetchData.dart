@@ -1,0 +1,45 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
+class Users {
+  final String? email;
+  final String? name;
+  final String? password;
+  final String? uid;
+  final String? token;
+  final String? profilePic;
+  Users({
+    required this.email,
+    required this.name,
+    required this.password,
+    required this.uid,
+    required this.token,
+    required this.profilePic,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'email': email,
+      'name': name,
+      'password': password,
+      'uid': uid,
+      'token': token,
+      'profilePic': profilePic,
+    };
+  }
+
+  factory Users.fromMap(Map<String, dynamic> map) {
+    return Users(
+      email: map['email'] != null ? map['email'] as String : null,
+      name: map['name'] != null ? map['name'] as String : null,
+      password: map['password'] != null ? map['password'] as String : null,
+      uid: map['uid'] != null ? map['uid'] as String : null,
+      token: map['token'] != null ? map['token'] as String : null,
+      profilePic: map['profilePic'] != null ? map['profilePic'] as String : null,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory Users.fromJson(String source) => Users.fromMap(json.decode(source) as Map<String, dynamic>);
+}
