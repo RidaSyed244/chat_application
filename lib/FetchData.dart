@@ -8,6 +8,7 @@ class Users {
   final String? uid;
   final String? token;
   final String? profilePic;
+  final  phoneNumber;
   Users({
     required this.email,
     required this.name,
@@ -15,6 +16,7 @@ class Users {
     required this.uid,
     required this.token,
     required this.profilePic,
+    required this.phoneNumber,
   });
 
   Map<String, dynamic> toMap() {
@@ -36,6 +38,7 @@ class Users {
       uid: map['uid'] != null ? map['uid'] as String : null,
       token: map['token'] != null ? map['token'] as String : null,
       profilePic: map['profilePic'] != null ? map['profilePic'] as String : null,
+      phoneNumber: map['phoneNumber'] != null ? map['phoneNumber'] as String : null,
     );
   }
 
