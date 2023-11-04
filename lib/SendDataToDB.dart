@@ -2,6 +2,7 @@
 
 import 'dart:io' as io;
 import 'dart:io';
+import 'package:chat_application/FetchData.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -20,8 +21,9 @@ File? photo;
 PickedFile? imageFile;
 PickedFile? videoFile;
 final ImagePicker _picker = ImagePicker();
-
+List filteredUsers = [];
 String? token;
+List<Users> allContactUsers = [];
 
 class AddDataToDB extends StateNotifier {
   AddDataToDB() : super('');
@@ -33,6 +35,10 @@ class AddDataToDB extends StateNotifier {
     );
     User? userss = auth.user;
     return userss;
+  }
+
+  getUid(uid) {
+    return uid;
   }
 
   Future RegisterUserIndo() async {
@@ -160,4 +166,6 @@ class AddDataToDB extends StateNotifier {
     }
     return VideoFile;
   }
+
+  
 }

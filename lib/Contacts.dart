@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:chat_application/FetchData.dart';
-import 'package:chat_application/users.dart';
+import 'package:chat_application/searchContacts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +18,6 @@ class _ContactsState extends ConsumerState<Contacts> {
   List<Contact> contacts = [];
   bool isLoading = true;
   List<Users> registeredUsers = [];
-  Map<String, Users> matchingContacts = {};
 
   getContactPermission() async {
     if (await Permission.contacts.isGranted) {
@@ -39,7 +38,11 @@ class _ContactsState extends ConsumerState<Contacts> {
   @override
   void initState() {
     getContactPermission();
-
+    FirebaseFirestore.instance.collection("Users").get().then((value) {
+      value.docs.forEach((element) {
+        registeredUsers.add(Users.fromMap(element.data()));
+      });
+    });
     super.initState();
   }
 
@@ -66,7 +69,11 @@ class _ContactsState extends ConsumerState<Contacts> {
           padding: const EdgeInsets.fromLTRB(8, 10, 0, 0),
           child: IconButton(
             color: Colors.white,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return SearchContacts();
+              }));
+            },
             icon: Icon(
               Icons.search,
               size: 30,
@@ -92,7 +99,7 @@ class _ContactsState extends ConsumerState<Contacts> {
               child: CircularProgressIndicator(),
             )
           : Padding(
-              padding: const EdgeInsets.only(top: 50.0),
+              padding: EdgeInsets.only(top: 50.0),
               child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -104,97 +111,99 @@ class _ContactsState extends ConsumerState<Contacts> {
                   child: ListView.builder(
                     itemCount: contacts.length,
                     itemBuilder: (context, index) {
-                      if (contacts.isNotEmpty) {
-                        List<Widget> contactWidgets = [];
-                        bool contactMatched = false;
+                      List<Widget> contactWidgets = [];
+                      bool contactMatched = false;
 
-                        for (var phone in contacts[index].phones ?? []) {
-                          String contactPhoneNumber = phone.value;
-                          String last7DigitsContact =
-                              contactPhoneNumber.substring(
-                            max(0, contactPhoneNumber.length - 7),
-                          );
+                      for (var phone in contacts[index].phones ?? []) {
+                        String contactPhoneNumber = phone.value;
+                        String last7DigitsContact = contactPhoneNumber
+                            .substring(
+                              max(0, contactPhoneNumber.length - 7),
+                            )
+                            .toLowerCase();
 
-                          for (var user in registeredUsers) {
-                            String userPhoneNumber = user.phoneNumber;
-                            String last7DigitsUser = userPhoneNumber.substring(
-                              max(0, userPhoneNumber.length - 7),
-                            );
+                        for (var user in registeredUsers) {
+                          String userPhoneNumber = user.phoneNumber;
+                          String last7DigitsUser = userPhoneNumber
+                              .substring(
+                                max(0, userPhoneNumber.length - 7),
+                              )
+                              .toLowerCase();
 
-                            if (last7DigitsContact == last7DigitsUser) {
-                              contactWidgets.add(
-                                ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.black,
-                                    radius: 33,
-                                    backgroundImage:
-                                        NetworkImage(user.profilePic!),
-                                  ),
-                                  title: Text(
-                                    user.name!,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  subtitle: Text(user.phoneNumber),
+                          if (last7DigitsContact == last7DigitsUser) {
+                            contactWidgets.add(
+                              ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.black,
+                                  radius: 33,
+                                  backgroundImage:
+                                      NetworkImage(user.profilePic!),
                                 ),
-                              );
-                              contactMatched = true;
-                              break;
-                            }
+                                title: Text(
+                                  user.name!,
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: Text(user.phoneNumber),
+                              ),
+                            );
+                            contactMatched = true;
+                            break;
                           }
                         }
+                      }
 
-                        if (!contactMatched) {
-                          // This contact did not match any registered user, so display it.
-                          contactWidgets.add(
-                            ListTile(
-                              trailing: CircleAvatar(
-                                backgroundColor: Colors.green,
-                                radius: 25,
-                                child: Center(
-                                  child: Text("Invite",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      )),
-                                ),
+                      if (!contactMatched) {
+                        // This contact did not match any registered user, so display it.
+                        contactWidgets.add(
+                          ListTile(
+                            trailing: CircleAvatar(
+                              backgroundColor: Colors.green,
+                              radius: 25,
+                              child: Center(
+                                child: Text("Invite",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    )),
                               ),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.black,
-                                radius: 33,
-                                child: Center(
-                                  child: Text(
-                                      "${contacts[index].displayName![0]}"),
-                                ),
-                              ),
-                              title: Text(
-                                contacts[index].displayName ??
-                                    'Unknown Contact',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              subtitle: Text(
-                                  contacts[index].phones?.first.value ??
-                                      'No phone number'),
                             ),
-                          );
-                        }
-
-                        return Column(
-                          children: contactWidgets,
-                        );
-                      } else {
-                        return Center(
-                          child: Text("No Contacts Found"),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.black,
+                              radius: 33,
+                              child: Center(
+                                child:
+                                    Text("${contacts[index].displayName![0]}"),
+                              ),
+                            ),
+                            title: Text(
+                              contacts[index].displayName ?? 'Unknown Contact',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              contacts[index].phones?.isNotEmpty == true
+                                  ? contacts[index]
+                                          .phones!
+                                          .elementAt(0)
+                                          .value ??
+                                      "Not Found Phone Number"
+                                  : "Not Found",
+                            ),
+                          ),
                         );
                       }
+
+                      return Stack(
+                        children: contactWidgets,
+                      );
                     },
                   )),
             ),

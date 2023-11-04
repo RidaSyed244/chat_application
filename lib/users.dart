@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 final signup = StateNotifierProvider((ref) => AddDataToDB());
-final users = FirebaseFirestore.instance.collection("Users").snapshots();
-final userStream = StreamProvider<Users>((ref) {
-  return users as Stream<Users>;
-});
+
+final getusersForMessage =
+    FirebaseFirestore.instance.collection("Users").snapshots();
+final alluserMessageStream = StreamProvider((ref) => getusersForMessage);

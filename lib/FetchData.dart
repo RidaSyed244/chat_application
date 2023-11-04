@@ -1,6 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
-
+List<AllUsers> allusers = [];
+var profilePic;
+var name;
+var uid;
+var currentuid;
+var currentprofilePic;
+List<AllUsers> users = [];
+var currentUserIndex;
+var currentUsername;
+List storySnapshots = [];
 class Users {
   final String? email;
   final String? name;
@@ -45,4 +54,24 @@ class Users {
   String toJson() => json.encode(toMap());
 
   factory Users.fromJson(String source) => Users.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+class AllUsers {
+  final String name;
+  final String profilePic;
+  List<Story> stories;
+  final String uid;
+
+  AllUsers({
+    required this.name,
+    required this.profilePic,
+    required this.stories,
+    required this.uid,
+  });
+}
+
+class Story {
+  final String storyType;
+  final String content;
+
+  Story({required this.storyType, required this.content});
 }

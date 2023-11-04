@@ -1,12 +1,10 @@
 import 'package:chat_application/Contacts.dart';
 import 'package:chat_application/Home.dart';
 import 'package:chat_application/OnBoarding.dart';
-import 'package:chat_application/avdStoryTesting.dart';
 import 'package:chat_application/bottomNavigation.dart';
-import 'package:chat_application/signUp.dart';
+import 'package:chat_application/riverpodPractice.dart';
+import 'package:chat_application/searchContacts.dart';
 import 'package:chat_application/splashScreen.dart';
-import 'package:chat_application/uploadDP.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -56,10 +54,9 @@ class _MyAppState extends State<MyAppStateful> {
       context,
       MaterialPageRoute(
           builder: (context) =>
-              widget.email != null ? Contacts() : OnBoarding()),
+              widget.email != null ? BottonNavigation() : OnBoarding()),
     );
   }
- 
 
   @override
   Widget build(BuildContext context) {

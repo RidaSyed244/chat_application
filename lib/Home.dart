@@ -1,7 +1,7 @@
 import 'package:chat_application/FetchData.dart';
 import 'package:chat_application/newStoryByCU.dart';
+import 'package:chat_application/searchContacts.dart';
 import 'package:chat_application/storyView.dart';
-import 'package:chat_application/story_page.dart';
 import 'package:chat_application/text.dart';
 import 'package:chat_application/users.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,38 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-
-class AllUsers {
-  final String name;
-  final String profilePic;
-  List<Story> stories;
-  final String uid;
-
-  AllUsers({
-    required this.name,
-    required this.profilePic,
-    required this.stories,
-    required this.uid,
-  });
-}
-
-class Story {
-  final String storyType;
-  final String content;
-
-  Story({required this.storyType, required this.content});
-}
-
-var profilePic;
-var name;
-var uid;
-var currentuid;
-var currentprofilePic;
-List<AllUsers> allusers = [];
-List<AllUsers> users = [];
-var currentUserIndex;
-var currentUsername;
-List storySnapshots = [];
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});
@@ -113,6 +81,7 @@ class _HomeState extends ConsumerState<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final allmessageUsers = ref.watch(alluserMessageStream);
     return Scaffold(
       backgroundColor: Colors.black,
       resizeToAvoidBottomInset: true,
@@ -231,174 +200,172 @@ class _HomeState extends ConsumerState<Home> {
             ),
             SizedBox(height: 30),
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                ),
-                child: ListView(
-                  children: [
-                    Container(
-                      height: 600,
-                      child: ListView.builder(
-                        itemCount: 1, // Adjust the itemCount as needed
-                        itemBuilder: (context, index) {
-                          return Container(
-                            height: 100,
-                            decoration: BoxDecoration(),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: ClipOval(
-                                      child: NetworkImage('url') == true
-                                          ? Image.network(
-                                              '',
-                                              width: 65,
-                                              height: 65,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.asset(
-                                              "assets/images/defaultDp.jpg",
-                                              width: 65,
-                                              height: 65,
-                                              fit: BoxFit.cover,
-                                            ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(10, 25, 0, 0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Text(
-                                            "Rida Syed",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                        Text(
-                                          "Hey there! I am using WhatsApp",
-                                          style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 13),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(43, 25, 0, 0),
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          "10:00 AM",
-                                          style: TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 13),
-                                        ),
-                                        SizedBox(height: 10),
-                                        Container(
-                                          height: 25,
-                                          width: 25,
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius:
-                                                BorderRadius.circular(50),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              "2",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            0, 0, 6, 0),
-                                        child: Row(
-                                          children: [
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      25, 25, 0, 0),
-                                              child: Container(
-                                                height: 45,
-                                                width: 45,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black,
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                ),
-                                                child: IconButton(
-                                                  onPressed: () {},
-                                                  icon: Icon(
-                                                    Icons.notifications,
-                                                    size: 25,
-                                                  ),
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 20),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                      0, 25, 0, 0),
-                                              child: Container(
-                                                height: 45,
-                                                width: 45,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.red,
-                                                  borderRadius:
-                                                      BorderRadius.circular(50),
-                                                ),
-                                                child: IconButton(
-                                                  onPressed: () {},
-                                                  icon: Icon(
-                                                    Icons.delete_outline,
-                                                    size: 25,
-                                                  ),
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
                 ),
               ),
-            )
+              child: allmessageUsers.when(
+                data: (data) {
+                  return ListView.builder(
+                    itemCount: data.docs.length,
+                    itemBuilder: (context, index) {
+                      final singleUser = data.docs[index];
+                      Users users = Users.fromMap(singleUser.data());
+                      return Container(
+                        height: 100,
+                        decoration: BoxDecoration(),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(6.0),
+                                child: ClipOval(
+                                  child: NetworkImage(users.profilePic!) != null
+                                      ? Image.network(
+                                          users.profilePic!,
+                                          width: 65,
+                                          height: 65,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.asset(
+                                          "assets/images/defaultDp.jpg",
+                                          width: 65,
+                                          height: 65,
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(10, 25, 0, 0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(
+                                        "${users.name}",
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Text(
+                                      "Hey there! I am using WhatsApp",
+                                      style: TextStyle(
+                                          color: Colors.black, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(43, 25, 0, 0),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "10:00 AM",
+                                      style: TextStyle(
+                                          color: Colors.black, fontSize: 13),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Container(
+                                      height: 25,
+                                      width: 25,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          "2",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(0, 0, 6, 0),
+                                    child: Row(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              25, 25, 0, 0),
+                                          child: Container(
+                                            height: 45,
+                                            width: 45,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                            ),
+                                            child: IconButton(
+                                              onPressed: () {},
+                                              icon: Icon(
+                                                Icons.notifications,
+                                                size: 25,
+                                              ),
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: 20),
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              0, 25, 0, 0),
+                                          child: Container(
+                                            height: 45,
+                                            width: 45,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                            ),
+                                            child: IconButton(
+                                              onPressed: () {},
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                size: 25,
+                                              ),
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                error: (e, s) {
+                  return Text(e.toString());
+                },
+                loading: () => Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ))
           ],
         ),
       ),
