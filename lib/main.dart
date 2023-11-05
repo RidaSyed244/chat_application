@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'messages.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -54,7 +56,7 @@ class _MyAppState extends State<MyAppStateful> {
       context,
       MaterialPageRoute(
           builder: (context) =>
-              widget.email != null ? BottonNavigation() : OnBoarding()),
+              widget.email != null ? Messages() : OnBoarding()),
     );
   }
 

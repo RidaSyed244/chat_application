@@ -1,4 +1,5 @@
 import 'package:chat_application/FetchData.dart';
+import 'package:chat_application/messages.dart';
 import 'package:chat_application/newStoryByCU.dart';
 import 'package:chat_application/searchContacts.dart';
 import 'package:chat_application/storyView.dart';
@@ -7,8 +8,11 @@ import 'package:chat_application/users.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+
+void doNothing(BuildContext context) {}
 
 class Home extends ConsumerStatefulWidget {
   const Home({super.key});
@@ -215,143 +219,90 @@ class _HomeState extends ConsumerState<Home> {
                     itemBuilder: (context, index) {
                       final singleUser = data.docs[index];
                       Users users = Users.fromMap(singleUser.data());
-                      return Container(
-                        height: 100,
-                        decoration: BoxDecoration(),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(6.0),
-                                child: ClipOval(
-                                  child: NetworkImage(users.profilePic!) != null
-                                      ? Image.network(
-                                          users.profilePic!,
-                                          width: 65,
-                                          height: 65,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : Image.asset(
-                                          "assets/images/defaultDp.jpg",
-                                          width: 65,
-                                          height: 65,
-                                          fit: BoxFit.cover,
-                                        ),
+                      return Slidable(
+                        // Specify a key if the Slidable is dismissible.
+                        key: const ValueKey(0),
+                        // The end action pane is the one at the right or the bottom side.
+                        endActionPane: const ActionPane(
+                          motion: ScrollMotion(),
+                          children: [
+                            SlidableAction(
+                              // An action can be bigger than the others.
+                              flex: 1,
+
+                              onPressed: doNothing,
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              icon: Icons.notifications,
+                            ),
+                            SlidableAction(
+                              onPressed: doNothing,
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete,
+                            ),
+                          ],
+                        ),
+
+                        // The child of the Slidable is what the user sees when the
+                        // component is not dragged.
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(0, 10, 0, 8),
+                          child: ListTile(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Messages()),
+                              );
+                            },
+                            title: Text(
+                              '${users.name}',
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text('Slide me',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                )),
+                            leading: CircleAvatar(
+                              radius: 40,
+                              backgroundImage: NetworkImage(users.profilePic!),
+                            ),
+                            trailing: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "10:00 AM",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 13,
+                                  ),
                                 ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(10, 25, 0, 0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Text(
-                                        "${users.name}",
-                                        textAlign: TextAlign.left,
-                                        style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    Text(
-                                      "Hey there! I am using WhatsApp",
+                                SizedBox(height: 10),
+                                Container(
+                                  height: 25,
+                                  width: 25,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      "2",
                                       style: TextStyle(
-                                          color: Colors.black, fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(43, 25, 0, 0),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      "10:00 AM",
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 13),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      height: 25,
-                                      width: 25,
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius: BorderRadius.circular(50),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          "2",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 13,
-                                          ),
-                                        ),
+                                        color: Colors.white,
+                                        fontSize: 13,
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              Column(
-                                children: [
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(0, 0, 6, 0),
-                                    child: Row(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              25, 25, 0, 0),
-                                          child: Container(
-                                            height: 45,
-                                            width: 45,
-                                            decoration: BoxDecoration(
-                                              color: Colors.black,
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                            ),
-                                            child: IconButton(
-                                              onPressed: () {},
-                                              icon: Icon(
-                                                Icons.notifications,
-                                                size: 25,
-                                              ),
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(width: 20),
-                                        Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                              0, 25, 0, 0),
-                                          child: Container(
-                                            height: 45,
-                                            width: 45,
-                                            decoration: BoxDecoration(
-                                              color: Colors.red,
-                                              borderRadius:
-                                                  BorderRadius.circular(50),
-                                            ),
-                                            child: IconButton(
-                                              onPressed: () {},
-                                              icon: Icon(
-                                                Icons.delete_outline,
-                                                size: 25,
-                                              ),
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              )
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       );
