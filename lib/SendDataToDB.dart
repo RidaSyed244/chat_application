@@ -17,6 +17,8 @@ final TextEditingController passwordController = TextEditingController();
 final TextEditingController nameController = TextEditingController();
 final TextEditingController confirmPasswordController = TextEditingController();
 final TextEditingController storyReplyController = TextEditingController();
+final TextEditingController textEditingController = TextEditingController();
+
 File? photo;
 PickedFile? imageFile;
 PickedFile? videoFile;
@@ -39,6 +41,29 @@ class AddDataToDB extends StateNotifier {
 
   getUid(uid) {
     return uid;
+  }
+
+  sendMessages(receiversUid, receiversName, reciversDp) async {
+    await FirebaseFirestore.instance
+        .collection("Users")
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .collection("MessagesSendTo")
+        .doc(receiversUid)
+        .collection("Messages")
+        .add({
+      "Message": textEditingController.text,
+      "VoiceMessage": "",
+      "ImageMessage": "",
+      "FileMessage": "",
+      "VideoMessage": "",
+      "time": DateTime.now(),
+      "SenderName": name,
+      "SenderProfilePic": profilePic,
+      "ReceiverName": receiversName,
+      "ReceiverProfilePic": reciversDp,
+      "SenderUid": FirebaseAuth.instance.currentUser?.uid,
+      "ReceiverUid": receiversUid,
+    });
   }
 
   Future RegisterUserIndo() async {
@@ -166,6 +191,4 @@ class AddDataToDB extends StateNotifier {
     }
     return VideoFile;
   }
-
-  
 }

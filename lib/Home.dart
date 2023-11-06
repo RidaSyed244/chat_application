@@ -219,93 +219,103 @@ class _HomeState extends ConsumerState<Home> {
                     itemBuilder: (context, index) {
                       final singleUser = data.docs[index];
                       Users users = Users.fromMap(singleUser.data());
-                      return Slidable(
-                        // Specify a key if the Slidable is dismissible.
-                        key: const ValueKey(0),
-                        // The end action pane is the one at the right or the bottom side.
-                        endActionPane: const ActionPane(
-                          motion: ScrollMotion(),
-                          children: [
-                            SlidableAction(
-                              // An action can be bigger than the others.
-                              flex: 1,
+                      if (users.uid != currentuid) {
+                        return Slidable(
+                          // Specify a key if the Slidable is dismissible.
+                          key: const ValueKey(0),
+                          // The end action pane is the one at the right or the bottom side.
+                          endActionPane: const ActionPane(
+                            motion: ScrollMotion(),
+                            children: [
+                              SlidableAction(
+                                // An action can be bigger than the others.
+                                flex: 1,
 
-                              onPressed: doNothing,
-                              backgroundColor: Colors.black,
-                              foregroundColor: Colors.white,
-                              icon: Icons.notifications,
-                            ),
-                            SlidableAction(
-                              onPressed: doNothing,
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              icon: Icons.delete,
-                            ),
-                          ],
-                        ),
+                                onPressed: doNothing,
+                                backgroundColor: Colors.black,
+                                foregroundColor: Colors.white,
+                                icon: Icons.notifications,
+                              ),
+                              SlidableAction(
+                                onPressed: doNothing,
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                icon: Icons.delete,
+                              ),
+                            ],
+                          ),
 
-                        // The child of the Slidable is what the user sees when the
-                        // component is not dragged.
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0, 10, 0, 8),
-                          child: ListTile(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => Messages()),
-                              );
-                            },
-                            title: Text(
-                              '${users.name}',
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text('Slide me',
+                          // The child of the Slidable is what the user sees when the
+                          // component is not dragged.
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(0, 10, 0, 8),
+                            child: ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Messages(
+                                            name: users.name.toString(),
+                                            profilePic:
+                                                users.profilePic.toString(),
+                                            uid: users.uid.toString(),
+                                          )),
+                                );
+                              },
+                              title: Text(
+                                '${users.name}',
                                 style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                )),
-                            leading: CircleAvatar(
-                              radius: 40,
-                              backgroundImage: NetworkImage(users.profilePic!),
-                            ),
-                            trailing: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "10:00 AM",
-                                  style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: 13,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text('Slide me',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  )),
+                              leading: CircleAvatar(
+                                radius: 40,
+                                backgroundImage:
+                                    NetworkImage(users.profilePic!),
+                              ),
+                              trailing: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    "10:00 AM",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 13,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(height: 10),
-                                Container(
-                                  height: 25,
-                                  width: 25,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      "2",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
+                                  SizedBox(height: 10),
+                                  Container(
+                                    height: 25,
+                                    width: 25,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "2",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        return Container();
+                      }
                     },
                   );
                 },

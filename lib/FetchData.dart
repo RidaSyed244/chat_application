@@ -6,9 +6,10 @@ var name;
 var uid;
 var currentuid;
 var currentprofilePic;
+var currentUsername;
+
 List<AllUsers> users = [];
 var currentUserIndex;
-var currentUsername;
 List storySnapshots = [];
 class Users {
   final String? email;

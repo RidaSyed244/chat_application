@@ -1,13 +1,41 @@
+import 'package:chat_application/SendDataToDB.dart';
+import 'package:chat_application/users.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class Messages extends StatefulWidget {
-  const Messages({super.key});
+class Messages extends ConsumerStatefulWidget {
+  Messages({required this.uid, required this.name, required this.profilePic});
+  final String uid;
+  final String name;
+  final String profilePic;
 
   @override
-  State<Messages> createState() => _MessagesState();
+  ConsumerState<Messages> createState() => _MessagesState();
 }
 
-class _MessagesState extends State<Messages> {
+class _MessagesState extends ConsumerState<Messages> {
+  bool _isTyping = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen to changes in the text field
+    textEditingController.addListener(() {
+      setState(() {
+        _isTyping = textEditingController.text.isNotEmpty;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    textEditingController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -35,7 +63,7 @@ class _MessagesState extends State<Messages> {
                           )),
                       CircleAvatar(
                         radius: 30,
-                        backgroundImage: NetworkImage("url"),
+                        backgroundImage: NetworkImage("${widget.profilePic}"),
                       ),
                       SizedBox(
                         width: 10,
@@ -43,7 +71,7 @@ class _MessagesState extends State<Messages> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Rida Syed",
+                          Text("${widget.name}",
                               style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 20,
@@ -102,6 +130,7 @@ class _MessagesState extends State<Messages> {
                       )),
                   Expanded(
                     child: TextField(
+                      controller: textEditingController,
                       style: TextStyle(
                         color: Colors.black,
                       ),
@@ -124,30 +153,50 @@ class _MessagesState extends State<Messages> {
                           hintStyle: TextStyle(color: Colors.grey)),
                     ),
                   ),
-                  IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.camera_alt_outlined,
-                        color: const Color.fromARGB(255, 60, 60, 60),
-                        size: 27,
-                      )),
-                  IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.mic_outlined,
-                        color: const Color.fromARGB(255, 60, 60, 60),
-                        size: 27,
-                      )),
-                  // CircleAvatar(
-                  //   radius: 23,
-                  //   backgroundColor: Colors.green,
-                  //   child: IconButton(
-                  //       onPressed: () async {},
-                  //       icon: Icon(
-                  //         Icons.send,
-                  //         color: Colors.white,
-                  //       )),
-                  // ),
+                  _isTyping
+                      ? Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: CircleAvatar(
+                            radius: 23,
+                            backgroundColor: Colors.green,
+                            child: IconButton(
+                                onPressed: () async {
+                                  try {
+                                    await ref
+                                        .read(signup.notifier)
+                                        .sendMessages(widget.uid, widget.name,
+                                            widget.profilePic);
+                                    textEditingController.clear();
+
+                                    Navigator.pop(context);
+                                  } catch (e) {
+                                    print(e);
+                                  }
+                                },
+                                icon: Icon(
+                                  Icons.send,
+                                  color: Colors.white,
+                                )),
+                          ),
+                        )
+                      : Row(
+                          children: [
+                            IconButton(
+                                onPressed: () {},
+                                icon: Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: const Color.fromARGB(255, 60, 60, 60),
+                                  size: 27,
+                                )),
+                            IconButton(
+                                onPressed: () {},
+                                icon: Icon(
+                                  Icons.mic_outlined,
+                                  color: const Color.fromARGB(255, 60, 60, 60),
+                                  size: 27,
+                                )),
+                          ],
+                        )
                 ],
               ),
             ),
