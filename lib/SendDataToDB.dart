@@ -44,21 +44,15 @@ class AddDataToDB extends StateNotifier {
   }
 
   sendMessages(receiversUid, receiversName, reciversDp) async {
-    await FirebaseFirestore.instance
-        .collection("Users")
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .collection("MessagesSendTo")
-        .doc(receiversUid)
-        .collection("Messages")
-        .add({
+    await FirebaseFirestore.instance.collection("Messages").add({
       "Message": textEditingController.text,
       "VoiceMessage": "",
       "ImageMessage": "",
       "FileMessage": "",
       "VideoMessage": "",
       "time": DateTime.now(),
-      "SenderName": name,
-      "SenderProfilePic": profilePic,
+      "SenderName": currentUsername,
+      "SenderProfilePic": currentprofilePic,
       "ReceiverName": receiversName,
       "ReceiverProfilePic": reciversDp,
       "SenderUid": FirebaseAuth.instance.currentUser?.uid,

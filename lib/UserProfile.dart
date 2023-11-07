@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 
 class UserProfile extends StatefulWidget {
-  const UserProfile({super.key});
-
+  const UserProfile(
+      {super.key,
+      required this.name,
+      required this.Dp,
+      required this.email,
+      required this.address,
+      required this.phoneNumber});
+  final String name;
+  final String Dp;
+  final String email;
+  final String address;
+  final String phoneNumber;
   @override
   State<UserProfile> createState() => _UserProfileState();
 }
@@ -32,9 +42,9 @@ class _UserProfileState extends State<UserProfile> {
         children: [
           Center(
             child: ClipOval(
-              child: NetworkImage('url') == true
+              child: NetworkImage('${widget.Dp}') == true
                   ? Image.network(
-                      '',
+                      '${widget.Dp}',
                       width: 100,
                       height: 100,
                       fit: BoxFit.cover,
@@ -53,7 +63,7 @@ class _UserProfileState extends State<UserProfile> {
           Align(
             alignment: Alignment.center,
             child: Text(
-              "Rida Syed",
+              "${widget.name}",
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 25,
@@ -146,7 +156,7 @@ class _UserProfileState extends State<UserProfile> {
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: Text(
-                          "Rida Syed",
+                          "${widget.name}",
                           textAlign: TextAlign.left,
                           style: TextStyle(
                               color: Colors.black,
@@ -174,7 +184,7 @@ class _UserProfileState extends State<UserProfile> {
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: Text(
-                          "ridasyed244@gmail.com",
+                          "${widget.email}",
                           textAlign: TextAlign.left,
                           style: TextStyle(
                               color: Colors.black,
@@ -230,7 +240,7 @@ class _UserProfileState extends State<UserProfile> {
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: Text(
-                          "03206632809",
+                          "${widget.phoneNumber}",
                           textAlign: TextAlign.left,
                           style: TextStyle(
                               color: Colors.black,

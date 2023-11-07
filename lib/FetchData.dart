@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
+
 List<AllUsers> allusers = [];
 var profilePic;
 var name;
@@ -11,6 +12,7 @@ var currentUsername;
 List<AllUsers> users = [];
 var currentUserIndex;
 List storySnapshots = [];
+
 class Users {
   final String? email;
   final String? name;
@@ -18,7 +20,7 @@ class Users {
   final String? uid;
   final String? token;
   final String? profilePic;
-  final  phoneNumber;
+  final phoneNumber;
   Users({
     required this.email,
     required this.name,
@@ -47,15 +49,19 @@ class Users {
       password: map['password'] != null ? map['password'] as String : null,
       uid: map['uid'] != null ? map['uid'] as String : null,
       token: map['token'] != null ? map['token'] as String : null,
-      profilePic: map['profilePic'] != null ? map['profilePic'] as String : null,
-      phoneNumber: map['phoneNumber'] != null ? map['phoneNumber'] as String : null,
+      profilePic:
+          map['profilePic'] != null ? map['profilePic'] as String : null,
+      phoneNumber:
+          map['phoneNumber'] != null ? map['phoneNumber'] as String : null,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory Users.fromJson(String source) => Users.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Users.fromJson(String source) =>
+      Users.fromMap(json.decode(source) as Map<String, dynamic>);
 }
+
 class AllUsers {
   final String name;
   final String profilePic;
@@ -75,4 +81,53 @@ class Story {
   final String content;
 
   Story({required this.storyType, required this.content});
+}
+
+////////////// Messages Fetching /////////////////////
+class Messages {
+  final String Message;
+  final String ReceiverName;
+  final String ReceiverProfilePic;
+  final String ReceiverUid;
+  final String SenderName;
+  final String SenderProfilePic;
+  final String SenderUid;
+
+  Messages({
+    required this.Message,
+    required this.ReceiverName,
+    required this.ReceiverProfilePic,
+    required this.ReceiverUid,
+    required this.SenderName,
+    required this.SenderProfilePic,
+    required this.SenderUid,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'Message': Message,
+      'ReceiverName': ReceiverName,
+      'ReceiverProfilePic': ReceiverProfilePic,
+      'ReceiverUid': ReceiverUid,
+      'SenderName': SenderName,
+      'SenderProfilePic': SenderProfilePic,
+      'SenderUid': SenderUid,
+    };
+  }
+
+  factory Messages.fromMap(Map<String, dynamic> map) {
+    return Messages(
+      Message: map['Message'] as String,
+      ReceiverName: map['ReceiverName'] as String,
+      ReceiverProfilePic: map['ReceiverProfilePic'] as String,
+      ReceiverUid: map['ReceiverUid'] as String,
+      SenderName: map['SenderName'] as String,
+      SenderProfilePic: map['SenderProfilePic'] as String,
+      SenderUid: map['SenderUid'] as String,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory Messages.fromJson(String source) => Messages.fromMap(json.decode(source) as Map<String, dynamic>);
 }
