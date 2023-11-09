@@ -51,6 +51,9 @@ dependencies:
   contacts_service: ^0.6.3
   permission_handler: ^10.4.5
   alphabetical_scroll: ^0.0.1
+  record: ^4.4.4
+  audioplayers: ^1.1.1
+  flutter_sound: ^9.1.9
 
 dev_dependencies:
   flutter_test:

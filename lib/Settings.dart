@@ -81,38 +81,7 @@ class _SettingsState extends State<Settings> {
           ))
     ])
   ];
-  // List settingTiles = [
-  //   {
-  //     "Name": "Account",
-  //     "Description": "Privacy, security, change number",
-  //     "icon": Icon(Icons.key),
-  //   },
-  //   {
-  //     "Name": "Chat",
-  //     "Description": "Chat history,theme,wallpapers",
-  //     "icon": Icon(Icons.chat),
-  //   },
-  //   {
-  //     "Name": "Notifications",
-  //     "Description": "Messages, group and others",
-  //     "icon": Icon(Icons.notifications),
-  //   },
-  //   {
-  //     "Name": "Help",
-  //     "Description": "Help center,contact us, privacy policy",
-  //     "icon": Icon(Icons.help),
-  //   },
-  //   {
-  //     "Name": "Storage and data",
-  //     "Description": "Network usage, stogare usage",
-  //     "icon": Icon(Icons.storage),
-  //   },
-  //   {
-  //     "Name": "Invite a friend",
-  //     "Description": "Invite your friend",
-  //     "icon": Icon(Icons.insert_invitation_outlined),
-  //   },
-  // ];
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

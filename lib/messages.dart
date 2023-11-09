@@ -1,11 +1,29 @@
-import 'package:chat_application/FetchData.dart';
+// ignore_for_file: unused_field
 import 'package:chat_application/SendDataToDB.dart';
 import 'package:chat_application/UserProfile.dart';
 import 'package:chat_application/users.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+class AttachFiles {
+  final List<AttachTiles> details;
+  final String title;
+
+  AttachFiles({required this.title, required this.details});
+}
+
+class AttachTiles {
+  final String description;
+  final icon;
+
+  AttachTiles({
+    required this.description,
+    required this.icon,
+  });
+}
 
 class MessageScreen extends ConsumerStatefulWidget {
   MessageScreen(
@@ -27,7 +45,63 @@ class MessageScreen extends ConsumerStatefulWidget {
 class _MessagesState extends ConsumerState<MessageScreen> {
   bool _isTyping = false;
   final _auth = FirebaseAuth.instance.currentUser?.uid;
-
+  final recorder = FlutterSoundRecorder();
+  List<AttachFiles> tiles = [
+    AttachFiles(title: "Camera", details: [
+      AttachTiles(
+          description: "",
+          icon: Icon(
+            Icons.camera,
+            color: Colors.grey,
+            size: 30,
+          ))
+    ]),
+    AttachFiles(title: "Documents", details: [
+      AttachTiles(
+          description: "Share your files",
+          icon: Icon(
+            Icons.chat,
+            color: Colors.grey,
+            size: 30,
+          ))
+    ]),
+    AttachFiles(title: "Create a poll", details: [
+      AttachTiles(
+          description: "Create a poll for any querry",
+          icon: Icon(
+            Icons.notifications,
+            color: Colors.grey,
+            size: 30,
+          ))
+    ]),
+    AttachFiles(title: "Media", details: [
+      AttachTiles(
+          description: "Share photos and videos",
+          icon: Icon(
+            Icons.help,
+            color: Colors.grey,
+            size: 30,
+          ))
+    ]),
+    AttachFiles(title: "Contacts", details: [
+      AttachTiles(
+          description: "Share your contacts",
+          icon: Icon(
+            Icons.storage,
+            color: Colors.grey,
+            size: 30,
+          ))
+    ]),
+    AttachFiles(title: "Location", details: [
+      AttachTiles(
+          description: "Share your location",
+          icon: Icon(
+            Icons.insert_invitation,
+            color: Colors.grey,
+            size: 30,
+          ))
+    ])
+  ];
   @override
   void initState() {
     super.initState();
@@ -38,6 +112,29 @@ class _MessagesState extends ConsumerState<MessageScreen> {
         _isTyping = textEditingController.text.isNotEmpty;
       });
     });
+    initRecorder();
+  }
+
+  Future record() async {
+    await recorder.startRecorder(toFile: 'audio');
+  }
+
+  Future stop() async {
+    await recorder.stopRecorder();
+  }
+
+  Future initRecorder() async {
+    final status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      throw "Microphone Permission not granted";
+    }
+    await recorder.openRecorder();
+  }
+
+  @override
+  void dispose() {
+    recorder.closeRecorder();
+    super.dispose();
   }
 
   @override
@@ -187,36 +284,168 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        showModalBottomSheet(
+                          constraints: BoxConstraints.loose(
+                              Size.fromHeight(500.0)
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(30),
+                              topRight: Radius.circular(30),
+                            ),
+                          ),
+                          context: context,
+                          builder: (BuildContext context) {
+                            return Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    IconButton(
+                                        onPressed: () {},
+                                        icon: Icon(Icons.cancel,
+                                            color: Colors.black)),
+                                    SizedBox(
+                                      width: 90,
+                                    ),
+                                    Text('Share Content',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                ListView.builder(
+                                    shrinkWrap: true,
+                                    // physics: NeverScrollableScrollPhysics(),
+                                    itemCount: tiles.length,
+                                    itemBuilder: (context, index) {
+                                      final AttachFiles det = tiles[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: ListTile(
+                                          title: Text(
+                                            "${det.title}",
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          leading: CircleAvatar(
+                                            radius: 30,
+                                            backgroundColor: Color.fromARGB(
+                                                255, 249, 249, 249),
+                                            child: ListView.builder(
+                                                itemCount: det.details.length,
+                                                itemBuilder:
+                                                    (context, doublesubIndex) {
+                                                  final AttachTiles icons = det
+                                                      .details[doublesubIndex];
+
+                                                  return CircleAvatar(
+                                                    radius: 30,
+                                                    backgroundColor:
+                                                        Color.fromARGB(
+                                                            255, 249, 249, 249),
+                                                    child: icons.icon,
+                                                  );
+                                                }),
+                                          ),
+                                          subtitle: Container(
+                                            height: 20,
+                                            child: ListView.builder(
+                                                itemCount: det.details.length,
+                                                itemBuilder:
+                                                    (context, subindex) {
+                                                  final AttachTiles desc =
+                                                      det.details[subindex];
+
+                                                  return Text(
+                                                    "${desc.description}",
+                                                    style: TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: 15,
+                                                        fontWeight:
+                                                            FontWeight.w500),
+                                                  );
+                                                }),
+                                          ),
+                                        ),
+                                      );
+                                    })
+                              ],
+                            );
+                          },
+                        );
+                      },
                       icon: Icon(
                         Icons.attach_file,
                         color: Colors.black,
                       )),
-                  Expanded(
-                    child: TextField(
-                      controller: textEditingController,
-                      style: TextStyle(
-                        color: Colors.black,
-                      ),
-                      decoration: InputDecoration(
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.file_copy_outlined),
-                            onPressed: () {},
+                  recorder.isRecording
+                      ? StreamBuilder<RecordingDisposition>(
+                          stream: recorder.onProgress,
+                          builder: (context, snapshot) {
+                            final duration =
+                                snapshot.data?.duration ?? Duration.zero;
+                            String twoDigits(int n) => n.toString().padLeft(2);
+                            final twoDigitMinutes =
+                                twoDigits(duration.inMinutes.remainder(60));
+                            final twoDigitSeconds =
+                                twoDigits(duration.inSeconds.remainder(60));
+                            final recordingTime =
+                                "$twoDigitMinutes:$twoDigitSeconds";
+                            print(recordingTime);
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  recordingTime,
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.stop,
+                                      color: Colors.red), // Show stop icon
+                                  onPressed: () async {
+                                    await stop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                      : Expanded(
+                          child: TextField(
+                            controller: textEditingController,
+                            style: TextStyle(
+                              color: Colors.black,
+                            ),
+                            decoration: InputDecoration(
+                                suffixIcon: IconButton(
+                                  icon: Icon(Icons.file_copy_outlined),
+                                  onPressed: () {},
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide:
+                                        BorderSide(color: Colors.transparent)),
+                                filled: true,
+                                fillColor:
+                                    const Color.fromARGB(255, 248, 245, 245),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10.0,
+                                  horizontal: 22.0,
+                                ),
+                                hintText: 'Write your message...',
+                                hintStyle: TextStyle(color: Colors.grey)),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              borderSide:
-                                  BorderSide(color: Colors.transparent)),
-                          filled: true,
-                          fillColor: const Color.fromARGB(255, 248, 245, 245),
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 10.0,
-                            horizontal: 22.0,
-                          ),
-                          hintText: 'Write your message...',
-                          hintStyle: TextStyle(color: Colors.grey)),
-                    ),
-                  ),
+                        ),
                   _isTyping
                       ? Padding(
                           padding: const EdgeInsets.only(left: 8.0),
@@ -253,9 +482,15 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                                   size: 27,
                                 )),
                             IconButton(
-                                onPressed: () {},
+                                onPressed: () async {
+                                  if (recorder.isRecording) {
+                                    await stop();
+                                  } else {
+                                    await record();
+                                  }
+                                },
                                 icon: Icon(
-                                  Icons.mic_outlined,
+                                  recorder.isRecording ? Icons.stop : Icons.mic,
                                   color: const Color.fromARGB(255, 60, 60, 60),
                                   size: 27,
                                 )),
