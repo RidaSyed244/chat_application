@@ -1,6 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 List<AllUsers> allusers = [];
 var profilePic;
 var name;
@@ -85,6 +87,8 @@ class Story {
 
 ////////////// Messages Fetching /////////////////////
 class Messages {
+  final time;
+
   final String Message;
   final String ReceiverName;
   final String ReceiverProfilePic;
@@ -94,6 +98,7 @@ class Messages {
   final String SenderUid;
 
   Messages({
+    required this.time,
     required this.Message,
     required this.ReceiverName,
     required this.ReceiverProfilePic,
@@ -112,6 +117,7 @@ class Messages {
       'SenderName': SenderName,
       'SenderProfilePic': SenderProfilePic,
       'SenderUid': SenderUid,
+      'time': time,
     };
   }
 
@@ -124,6 +130,7 @@ class Messages {
       SenderName: map['SenderName'] as String,
       SenderProfilePic: map['SenderProfilePic'] as String,
       SenderUid: map['SenderUid'] as String,
+      time: map['time'] as Timestamp,
     );
   }
 

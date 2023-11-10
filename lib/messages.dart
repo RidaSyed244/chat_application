@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class AttachFiles {
@@ -231,6 +232,11 @@ class _MessagesState extends ConsumerState<MessageScreen> {
               List<Messagebubble> messageBubbles = [];
               for (var message in messages) {
                 final messageText = message['Message'];
+                final messageTime = message["time"];
+                //Show time like this 09: 44
+                final convertTime =
+                    DateFormat("h:mm a").format(messageTime.toDate());
+
                 final sendertext = message['SenderUid'];
                 final receiverMessages = message['ReceiverUid'];
                 final senderName = message['SenderName'];
@@ -239,6 +245,7 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                 final messageBubble = Messagebubble(
                   receiver: receiverMessages,
                   receiverDp: receiverDp,
+                  messageTime: convertTime,
                   text: messageText,
                   senderName: senderName,
                   receiverName: receiverName,
@@ -286,9 +293,6 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                   IconButton(
                       onPressed: () {
                         showModalBottomSheet(
-                          constraints: BoxConstraints.loose(
-                              Size.fromHeight(500.0)
-                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(30),
@@ -297,85 +301,100 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                           ),
                           context: context,
                           builder: (BuildContext context) {
-                            return Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    IconButton(
-                                        onPressed: () {},
-                                        icon: Icon(Icons.cancel,
-                                            color: Colors.black)),
-                                    SizedBox(
-                                      width: 90,
-                                    ),
-                                    Text('Share Content',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                ListView.builder(
-                                    shrinkWrap: true,
-                                    // physics: NeverScrollableScrollPhysics(),
-                                    itemCount: tiles.length,
-                                    itemBuilder: (context, index) {
-                                      final AttachFiles det = tiles[index];
-                                      return Padding(
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: ListTile(
-                                          title: Text(
-                                            "${det.title}",
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          leading: CircleAvatar(
-                                            radius: 30,
-                                            backgroundColor: Color.fromARGB(
-                                                255, 249, 249, 249),
-                                            child: ListView.builder(
-                                                itemCount: det.details.length,
-                                                itemBuilder:
-                                                    (context, doublesubIndex) {
-                                                  final AttachTiles icons = det
-                                                      .details[doublesubIndex];
+                            return Container(
+                              height: MediaQuery.of(context).size.height *
+                                  0.8, // Set a height constraint
 
-                                                  return CircleAvatar(
-                                                    radius: 30,
-                                                    backgroundColor:
-                                                        Color.fromARGB(
-                                                            255, 249, 249, 249),
-                                                    child: icons.icon,
-                                                  );
-                                                }),
-                                          ),
-                                          subtitle: Container(
-                                            height: 20,
-                                            child: ListView.builder(
-                                                itemCount: det.details.length,
-                                                itemBuilder:
-                                                    (context, subindex) {
-                                                  final AttachTiles desc =
-                                                      det.details[subindex];
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      IconButton(
+                                          onPressed: () {},
+                                          icon: Icon(Icons.cancel_outlined,
+                                              color: Colors.black)),
+                                      SizedBox(
+                                        width: 90,
+                                      ),
+                                      Text('Share Content',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                  Expanded(
+                                    child: ListView.builder(
+                                        shrinkWrap: true,
+                                        // physics: NeverScrollableScrollPhysics(),
+                                        itemCount: tiles.length,
+                                        itemBuilder: (context, index) {
+                                          final AttachFiles det = tiles[index];
+                                          return Padding(
+                                            padding: const EdgeInsets.all(10.0),
+                                            child: ListTile(
+                                              title: Text(
+                                                "${det.title}",
+                                                style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 20,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              leading: CircleAvatar(
+                                                radius: 30,
+                                                backgroundColor: Color.fromARGB(
+                                                    255, 249, 249, 249),
+                                                child: ListView.builder(
+                                                    itemCount:
+                                                        det.details.length,
+                                                    itemBuilder: (context,
+                                                        doublesubIndex) {
+                                                      final AttachTiles icons =
+                                                          det.details[
+                                                              doublesubIndex];
 
-                                                  return Text(
-                                                    "${desc.description}",
-                                                    style: TextStyle(
-                                                        color: Colors.grey,
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500),
-                                                  );
-                                                }),
-                                          ),
-                                        ),
-                                      );
-                                    })
-                              ],
+                                                      return CircleAvatar(
+                                                        radius: 30,
+                                                        backgroundColor:
+                                                            Color.fromARGB(255,
+                                                                249, 249, 249),
+                                                        child: icons.icon,
+                                                      );
+                                                    }),
+                                              ),
+                                              subtitle: Container(
+                                                height: 20,
+                                                child: ListView.builder(
+                                                    itemCount:
+                                                        det.details.length,
+                                                    itemBuilder:
+                                                        (context, subindex) {
+                                                      final AttachTiles desc =
+                                                          det.details[subindex];
+
+                                                      return Text(
+                                                        "${desc.description}",
+                                                        style: TextStyle(
+                                                            color: Colors.grey,
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w500),
+                                                      );
+                                                    }),
+                                              ),
+                                            ),
+                                          );
+                                        }),
+                                  )
+                                ],
+                              ),
                             );
                           },
                         );
@@ -513,11 +532,13 @@ class Messagebubble extends ConsumerWidget {
       required this.text,
       required this.receiverName,
       required this.senderName,
+      required this.messageTime,
       required this.receiverDp,
       this.time,
       required this.isMe});
   final String text;
   final String sender;
+  final messageTime;
   final bool isMe;
   final String receiverDp;
   final String receiverName;
@@ -562,7 +583,7 @@ class Messagebubble extends ConsumerWidget {
             Padding(
               padding: EdgeInsets.fromLTRB(50, 0, 0, 0),
               child: Material(
-                // elevation: 5.0,
+                // elevation: 3.0,
                 borderRadius: isMe
                     ? BorderRadius.only(
                         topLeft: Radius.circular(30.0),
@@ -588,14 +609,14 @@ class Messagebubble extends ConsumerWidget {
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Column(
+              crossAxisAlignment:
+                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.center,
               children: [
-                Text("09:00 AM",
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500)),
+                Text(
+                  messageTime,
+                  style: TextStyle(fontSize: 12.0, color: Colors.grey),
+                ),
               ],
             ),
           ]),
