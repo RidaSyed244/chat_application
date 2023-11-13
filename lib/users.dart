@@ -8,12 +8,17 @@ final signup = StateNotifierProvider((ref) => AddDataToDB());
 
 final getusersForMessage = FirebaseFirestore.instance
     .collection("Users")
-    .where("uid", isNotEqualTo: FirebaseAuth.instance.currentUser!.uid)
+    .where("uid", isNotEqualTo: FirebaseAuth.instance.currentUser?.uid)
     .snapshots();
 final alluserMessageStream = StreamProvider((ref) => getusersForMessage);
 final getAllMessages = FirebaseFirestore.instance
     .collection("Messages")
-    .orderBy("time", descending:  false)
+    .orderBy("time", descending: false)
     .snapshots()
     .map((event) => event.docs.map((e) => Messages.fromMap(e.data())).toList());
 final getAllMessagesStream = StreamProvider((ref) => getAllMessages);
+final allUsersData = FirebaseFirestore.instance
+    .collection("Users")
+    .snapshots()
+    .map((event) => event.docs.map((e) => Users.fromMap(e.data())).toList());
+final allUsersStream = StreamProvider((ref) => allUsersData);

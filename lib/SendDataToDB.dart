@@ -18,7 +18,7 @@ final TextEditingController nameController = TextEditingController();
 final TextEditingController confirmPasswordController = TextEditingController();
 final TextEditingController storyReplyController = TextEditingController();
 final TextEditingController textEditingController = TextEditingController();
-
+final TextEditingController forgotPasswordController = TextEditingController();
 File? photo;
 PickedFile? imageFile;
 PickedFile? videoFile;
@@ -70,6 +70,7 @@ class AddDataToDB extends StateNotifier {
       "name": nameController.text,
       "profilePic": "",
       "uid": FirebaseAuth.instance.currentUser?.uid,
+      "status": ""
     });
   }
 

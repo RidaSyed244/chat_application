@@ -39,6 +39,20 @@ class _SignUpState extends ConsumerState<SignUp> {
     });
   }
 
+  void generateAndSaveToken() async {
+    // Request permission for notifications
+    await messaging.requestPermission();
+
+    // Get the FCM token
+    token = await messaging.getToken();
+    print('FCM Token: $token');
+  }
+
+  void initState() {
+    super.initState();
+    generateAndSaveToken();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,6 +292,8 @@ class _SignUpState extends ConsumerState<SignUp> {
             onPressed: () async {
               await ref.read(signup.notifier).SignUp();
               await ref.read(signup.notifier).RegisterUserIndo();
+                              await ref.read(signup.notifier).getToken();
+
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => SignIn()),

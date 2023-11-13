@@ -1,7 +1,8 @@
+// ignore_for_file: override_on_non_overriding_member
+
 import 'package:chat_application/FetchData.dart';
 import 'package:chat_application/messages.dart';
 import 'package:chat_application/newStoryByCU.dart';
-import 'package:chat_application/searchContacts.dart';
 import 'package:chat_application/storyView.dart';
 import 'package:chat_application/text.dart';
 import 'package:chat_application/users.dart';
@@ -12,6 +13,35 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+void ChangeNotificationForChat(BuildContext context) async {
+  await FirebaseFirestore.instance
+      .collection("Messages")
+      .where("SenderUid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+      .get()
+      .then((value) {
+    value.docs.forEach((element) {
+      FirebaseFirestore.instance
+          .collection("Messages")
+          .doc(element.id)
+          .update({"Notification": "True"});
+    });
+  });
+}
+
+void DleteChat(BuildContext context) async {
+  await FirebaseFirestore.instance
+      .collection("Messages")
+      .where("SenderUid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+      .get()
+      .then((value) {
+    value.docs.forEach((element) {
+      FirebaseFirestore.instance
+          .collection("Messages")
+          .doc(element.id)
+          .delete();
+    });
+  });
+}
 void doNothing(BuildContext context) {}
 
 class Home extends ConsumerStatefulWidget {
@@ -21,7 +51,7 @@ class Home extends ConsumerStatefulWidget {
   ConsumerState<Home> createState() => _HomeState();
 }
 
-class _HomeState extends ConsumerState<Home> {
+class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   Future<void> getCurrentUserData() async {
     final getCurrentUsers = await FirebaseFirestore.instance
         .collection("Users")
@@ -76,11 +106,35 @@ class _HomeState extends ConsumerState<Home> {
     }
   }
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   @override
   void initState() {
     super.initState();
     getUserData();
     getCurrentUserData();
+    WidgetsBinding.instance.addObserver(
+      this,
+    );
+    setStatus("Online");
+  }
+
+  void setStatus(String status) async {
+    await _firestore.collection('Users').doc(_auth.currentUser!.uid).update({
+      "status": status,
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // online
+      setStatus("Online");
+    } else {
+      // offline
+      setStatus("Offline");
+    }
   }
 
   @override
@@ -204,126 +258,213 @@ class _HomeState extends ConsumerState<Home> {
             ),
             SizedBox(height: 30),
             Expanded(
-                child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
                 ),
-              ),
-              child: allmessageUsers.when(
-                data: (data) {
-                  return ListView.builder(
-                    itemCount: data.docs.length,
-                    itemBuilder: (context, index) {
-                      final singleUser = data.docs[index];
-                      Users users = Users.fromMap(singleUser.data());
-                      return Slidable(
-                        // Specify a key if the Slidable is dismissible.
-                        key:  ValueKey(0),
-                        // The end action pane is the one at the right or the bottom side.
-                        endActionPane: const ActionPane(
-                          motion: ScrollMotion(),
-                          children: [
-                            SlidableAction(
-                              // An action can be bigger than the others.
-                              flex: 1,
+                child: allmessageUsers.when(
+                  data: (data) {
+                    return ListView.builder(
+                      itemCount: data.docs.length,
+                      itemBuilder: (context, index) {
+                        final singleUser = data.docs[index];
+                        Users users = Users.fromMap(singleUser.data());
 
-                              onPressed: doNothing,
-                              backgroundColor: Colors.black,
-                              foregroundColor: Colors.white,
-                              icon: Icons.notifications,
-                            ),
-                            SlidableAction(
-                              onPressed: doNothing,
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              icon: Icons.delete,
-                            ),
-                          ],
-                        ),
-
-                        // The child of the Slidable is what the user sees when the
-                        // component is not dragged.
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0, 10, 0, 8),
-                          child: ListTile(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
+                        return Slidable(
+                          key: ValueKey(0),
+                          endActionPane: const ActionPane(
+                            motion: ScrollMotion(),
+                            children: [
+                              SlidableAction(
+                                flex: 1,
+                                onPressed: doNothing,
+                                backgroundColor: Colors.black,
+                                foregroundColor: Colors.white,
+                                icon: Icons.notifications,
+                              ),
+                              SlidableAction(
+                                onPressed: doNothing,
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                icon: Icons.delete,
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(0, 10, 0, 8),
+                            child: ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
                                     builder: (context) => MessageScreen(
-                                          name: users.name.toString(),
-                                          email: users.email.toString(),
-                                          phoneNumber: users.phoneNumber.toString(),
-                                          profilePic:
-                                              users.profilePic.toString(),
-                                          uid: users.uid.toString(),
-                                        )),
-                              );
-                            },
-                            title: Text(
-                              '${users.name}',
-                              style: TextStyle(
+                                      name: users.name.toString(),
+                                      email: users.email.toString(),
+                                      phoneNumber: users.phoneNumber.toString(),
+                                      profilePic: users.profilePic.toString(),
+                                      uid: users.uid.toString(),
+                                    ),
+                                  ),
+                                );
+                              },
+                              title: Text(
+                                '${users.name}',
+                                style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 20,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text('Slide me',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                )),
-                            leading: CircleAvatar(
-                              radius: 40,
-                              backgroundImage: NetworkImage(users.profilePic!),
-                            ),
-                            trailing: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "10:00 AM",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 13,
-                                  ),
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                SizedBox(height: 10),
-                                Container(
-                                  height: 25,
-                                  width: 25,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      "2",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
+                              ),
+                              // subtitle: getLstMessage.when(
+                              //   data: (messagesData) {
+                              //     if (messagesData.isNotEmpty &&
+                              //         index < messagesData.length) {
+                              //       return Text(
+                              //         '${messagesData[index].Message}',
+                              //         style: TextStyle(
+                              //           color: Colors.grey,
+                              //           fontSize: 15,
+                              //           fontWeight: FontWeight.w500,
+                              //         ),
+                              //       );
+                              //     } else {
+                              //       return Text("Start Conversation...");
+                              //     }
+                              //   },
+                              //   error: (e, s) {
+                              //     return Container();
+                              //   },
+                              //   loading: () => Center(
+                              //     child: CircularProgressIndicator(),
+                              //   ),
+                              // ),
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                radius: 28,
+                                child: Stack(
+                                  children: [
+                                    // User's profile picture
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      child: CircleAvatar(
+                                        radius: 28,
+                                        backgroundImage: NetworkImage(
+                                            users.profilePic.toString()),
+                                      ),
+                                    ),
+
+                                    // Green dot for online indicator
+                                    Positioned(
+                                      top: 36,
+                                      left: 35,
+                                      child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Users")
+                                              .doc(users.uid)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            final status =
+                                                snapshot.data?["status"];
+                                            if (snapshot.hasData &&
+                                                status == "Online") {
+                                              return Container(
+                                                height: 12,
+                                                width: 12,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: status == "Online"
+                                                      ? Colors.green
+                                                      : Colors.grey,
+                                                  border: Border.all(
+                                                    color: Colors.white,
+                                                    width: 2,
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              return Container(
+                                                height: 12,
+                                                width: 12,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.transparent,
+                                                ),
+                                              );
+                                            }
+                                          }),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              trailing: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  // getLstMessage.when(
+                                  //   data: (messagesData) {
+                                  //     if (messagesData.isNotEmpty &&
+                                  //         index < messagesData.length) {
+                                  //       final convertTime = DateFormat("h:mm a")
+                                  //           .format(messagesData[index]
+                                  //               .time
+                                  //               .toDate());
+                                  //       return Text(
+                                  //         "${convertTime}",
+                                  //         style: TextStyle(
+                                  //           color: Colors.black,
+                                  //           fontSize: 13,
+                                  //         ),
+                                  //       );
+                                  //     } else {
+                                  //       return Text("");
+                                  //     }
+                                  //   },
+                                  //   error: (e, s) {
+                                  //     return Container();
+                                  //   },
+                                  //   loading: () => Center(
+                                  //     child: CircularProgressIndicator(),
+                                  //   ),
+                                  // ),
+                                  SizedBox(height: 10),
+                                  Container(
+                                    height: 25,
+                                    width: 25,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        "2",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
-                error: (e, s) {
-                  return Text(e.toString());
-                },
-                loading: () => Center(
-                  child: CircularProgressIndicator(),
+                        );
+                      },
+                    );
+                  },
+                  error: (e, s) {
+                    return Text("Error");
+                  },
+                  loading: () => Center(
+                    child: CircularProgressIndicator(),
+                  ),
                 ),
               ),
-            ))
+            )
           ],
         ),
       ),

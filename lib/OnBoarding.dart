@@ -1,6 +1,14 @@
+// ignore_for_file: override_on_non_overriding_member
+
+import 'package:chat_application/Home.dart';
 import 'package:chat_application/signIn.dart';
 import 'package:chat_application/signUp.dart';
+import 'package:chat_application/uploadDP.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class OnBoarding extends StatefulWidget {
   const OnBoarding({super.key});
@@ -16,6 +24,33 @@ class _OnBoardingState extends State<OnBoarding> {
     'assets/images/google.png',
     'assets/images/apple.png',
   ];
+  signInWithGoogle() async {
+    GoogleSignInAccount? googleSignInAccount = await GoogleSignIn().signIn();
+    GoogleSignInAuthentication googleAuth =
+        await googleSignInAccount!.authentication;
+    AuthCredential credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+      accessToken: googleAuth.accessToken,
+    );
+    UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithCredential(credential);
+    // Store data in firebase firestore
+    FirebaseFirestore.instance
+        .collection('Users')
+        .doc(userCredential.user!.uid)
+        .set({
+      'name': userCredential.user!.displayName,
+      'email': userCredential.user!.email,
+      'profilePic': userCredential.user!.photoURL,
+      'uid': userCredential.user!.uid,
+    });
+    if (userCredential.user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => UploadDP()),
+      );
+    }
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,12 +131,15 @@ class _OnBoardingState extends State<OnBoarding> {
             SizedBox(
               height: 20,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: imagePaths
-                  .map((imagePath) => buildImageCircle(imagePath))
-                  .toList(),
-            ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              buildImageCircle(imagePaths[0]),
+              GestureDetector(
+                  onTap: () async {
+                    await signInWithGoogle();
+                  },
+                  child: buildImageCircle(imagePaths[1])),
+              buildImageCircle(imagePaths[2]),
+            ]),
             SizedBox(
               height: 12,
             ),

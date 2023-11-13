@@ -1,3 +1,4 @@
+import 'package:chat_application/ForgotPassword.dart';
 import 'package:chat_application/Home.dart';
 import 'package:chat_application/OnBoarding.dart';
 import 'package:chat_application/SendDataToDB.dart';
@@ -36,6 +37,7 @@ class _SignInState extends ConsumerState<SignIn> {
     super.initState();
     generateAndSaveToken();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,8 +233,8 @@ class _SignInState extends ConsumerState<SignIn> {
                 }
                 await ref.read(signup.notifier).getToken();
 
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => UploadDP()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => UploadDP()));
               },
               child: Text(
                 "Log in",
@@ -259,7 +261,12 @@ class _SignInState extends ConsumerState<SignIn> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   GestureDetector(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ForgotPswrd()),
+                      );
+                    },
                     child: Text("Forgot password?",
                         style: TextStyle(
                             color: Colors.green,

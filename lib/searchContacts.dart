@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-final searchController = TextEditingController();
 final getAllUsers =
     FirebaseFirestore.instance.collection("Users").get().then((value) {
   value.docs.forEach((element) {
@@ -41,7 +40,6 @@ class _SearchContactsState extends ConsumerState<SearchContacts> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: Container(
-        // padding: EdgeInsets.all(10),
         child: Column(
           children: [
             SizedBox(
@@ -51,7 +49,6 @@ class _SearchContactsState extends ConsumerState<SearchContacts> {
               padding: const EdgeInsets.all(12.0),
               child: TextField(
                 onChanged: searchContacts,
-                // controller: searchController,
                 style: TextStyle(color: Colors.black),
                 decoration: InputDecoration(
                   hintText: "Search",

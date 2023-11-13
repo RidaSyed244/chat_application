@@ -1,7 +1,9 @@
 // ignore_for_file: unused_field
+import 'package:chat_application/FetchData.dart';
 import 'package:chat_application/SendDataToDB.dart';
 import 'package:chat_application/UserProfile.dart';
 import 'package:chat_application/users.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -29,12 +31,14 @@ class AttachTiles {
 class MessageScreen extends ConsumerStatefulWidget {
   MessageScreen(
       {required this.uid,
+      this.message,
       required this.name,
       required this.profilePic,
       required this.email,
       required this.phoneNumber});
   final String uid;
   final String name;
+  final String? message;
   final String profilePic;
   final String email;
   final String phoneNumber;
@@ -46,7 +50,7 @@ class MessageScreen extends ConsumerStatefulWidget {
 class _MessagesState extends ConsumerState<MessageScreen> {
   bool _isTyping = false;
   final _auth = FirebaseAuth.instance.currentUser?.uid;
-  final recorder = FlutterSoundRecorder();
+  // final recorder = FlutterSoundRecorder();
   List<AttachFiles> tiles = [
     AttachFiles(title: "Camera", details: [
       AttachTiles(
@@ -113,30 +117,30 @@ class _MessagesState extends ConsumerState<MessageScreen> {
         _isTyping = textEditingController.text.isNotEmpty;
       });
     });
-    initRecorder();
+    // initRecorder();
   }
 
-  Future record() async {
-    await recorder.startRecorder(toFile: 'audio');
-  }
+  // Future record() async {
+  //   await recorder.startRecorder(toFile: 'audio');
+  // }
 
-  Future stop() async {
-    await recorder.stopRecorder();
-  }
+  // Future stop() async {
+  //   await recorder.stopRecorder();
+  // }
 
-  Future initRecorder() async {
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      throw "Microphone Permission not granted";
-    }
-    await recorder.openRecorder();
-  }
+  // Future initRecorder() async {
+  //   final status = await Permission.microphone.request();
+  //   if (status != PermissionStatus.granted) {
+  //     throw "Microphone Permission not granted";
+  //   }
+  //   await recorder.openRecorder();
+  // }
 
-  @override
-  void dispose() {
-    recorder.closeRecorder();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   recorder.closeRecorder();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -180,8 +184,66 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                               size: 20,
                             )),
                         CircleAvatar(
-                          radius: 30,
-                          backgroundImage: NetworkImage("${widget.profilePic}"),
+                          backgroundColor: Colors.white,
+                          radius: 28,
+                          child: Stack(
+                            children: [
+                              // User's profile picture
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                child: CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: NetworkImage(
+                                      widget.profilePic.toString()),
+                                ),
+                              ),
+
+                              // Green dot for online indicator
+                              Positioned(
+                                top: 36,
+                                left: 45,
+                                child: StreamBuilder(
+                                    stream: FirebaseFirestore.instance
+                                        .collection("Users")
+                                        .doc(widget.uid)
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      final status = snapshot.data?["status"];
+                                      if (snapshot.hasData &&
+                                          status == "Online") {
+                                        return Container(
+                                          height: 12,
+                                          width: 12,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: status == "Online"
+                                                ? Colors.green
+                                                : Colors.grey,
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 2,
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        return Container(
+                                          height: 12,
+                                          width: 12,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Colors.grey,
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 2,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }),
+                              ),
+                            ],
+                          ),
                         ),
                         SizedBox(
                           width: 10,
@@ -194,12 +256,28 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                                     color: Colors.black,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold)),
-                            Text("Active Now",
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500))
+                            StreamBuilder(
+                                stream: FirebaseFirestore.instance
+                                    .collection("Users")
+                                    .doc(widget.uid)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.data?["status"] == "Online") {
+                                    return Text("Active Now",
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500));
+                                  }else{
+                                    return Text("Offline",
+                                        textAlign: TextAlign.left,
+                                        style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500));
+                                  }
+                                })
                           ],
                         )
                       ],
@@ -403,68 +481,68 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                         Icons.attach_file,
                         color: Colors.black,
                       )),
-                  recorder.isRecording
-                      ? StreamBuilder<RecordingDisposition>(
-                          stream: recorder.onProgress,
-                          builder: (context, snapshot) {
-                            final duration =
-                                snapshot.data?.duration ?? Duration.zero;
-                            String twoDigits(int n) => n.toString().padLeft(2);
-                            final twoDigitMinutes =
-                                twoDigits(duration.inMinutes.remainder(60));
-                            final twoDigitSeconds =
-                                twoDigits(duration.inSeconds.remainder(60));
-                            final recordingTime =
-                                "$twoDigitMinutes:$twoDigitSeconds";
-                            print(recordingTime);
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  recordingTime,
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.stop,
-                                      color: Colors.red), // Show stop icon
-                                  onPressed: () async {
-                                    await stop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        )
-                      : Expanded(
-                          child: TextField(
-                            controller: textEditingController,
-                            style: TextStyle(
-                              color: Colors.black,
-                            ),
-                            decoration: InputDecoration(
-                                suffixIcon: IconButton(
-                                  icon: Icon(Icons.file_copy_outlined),
-                                  onPressed: () {},
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    borderSide:
-                                        BorderSide(color: Colors.transparent)),
-                                filled: true,
-                                fillColor:
-                                    const Color.fromARGB(255, 248, 245, 245),
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 10.0,
-                                  horizontal: 22.0,
-                                ),
-                                hintText: 'Write your message...',
-                                hintStyle: TextStyle(color: Colors.grey)),
+                  // recorder.isRecording
+                  //     ? StreamBuilder<RecordingDisposition>(
+                  //         stream: recorder.onProgress,
+                  //         builder: (context, snapshot) {
+                  //           final duration =
+                  //               snapshot.data?.duration ?? Duration.zero;
+                  //           String twoDigits(int n) => n.toString().padLeft(2);
+                  //           final twoDigitMinutes =
+                  //               twoDigits(duration.inMinutes.remainder(60));
+                  //           final twoDigitSeconds =
+                  //               twoDigits(duration.inSeconds.remainder(60));
+                  //           final recordingTime =
+                  //               "$twoDigitMinutes:$twoDigitSeconds";
+                  //           print(recordingTime);
+                  //           return Row(
+                  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //             children: [
+                  //               Text(
+                  //                 recordingTime,
+                  //                 style: TextStyle(
+                  //                   color: Colors.grey,
+                  //                   fontSize: 14,
+                  //                   fontWeight: FontWeight.w500,
+                  //                 ),
+                  //               ),
+                  //               IconButton(
+                  //                 icon: Icon(Icons.stop,
+                  //                     color: Colors.red), // Show stop icon
+                  //                 onPressed: () async {
+                  //                   // await stop();
+                  //                 },
+                  //               ),
+                  //             ],
+                  //           );
+                  //         },
+                  //       )
+                  //     :
+                  Expanded(
+                    child: TextField(
+                      controller: textEditingController,
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                      decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.file_copy_outlined),
+                            onPressed: () {},
                           ),
-                        ),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide:
+                                  BorderSide(color: Colors.transparent)),
+                          filled: true,
+                          fillColor: const Color.fromARGB(255, 248, 245, 245),
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 10.0,
+                            horizontal: 22.0,
+                          ),
+                          hintText: 'Write your message...',
+                          hintStyle: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
                   _isTyping
                       ? Padding(
                           padding: const EdgeInsets.only(left: 8.0),
@@ -502,14 +580,15 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                                 )),
                             IconButton(
                                 onPressed: () async {
-                                  if (recorder.isRecording) {
-                                    await stop();
-                                  } else {
-                                    await record();
-                                  }
+                                  // if (recorder.isRecording) {
+                                  //   // await stop();
+                                  // } else {
+                                  //   // await record();
+                                  // }
                                 },
                                 icon: Icon(
-                                  recorder.isRecording ? Icons.stop : Icons.mic,
+                                  // recorder.isRecording ? Icons.stop :
+                                  Icons.mic,
                                   color: const Color.fromARGB(255, 60, 60, 60),
                                   size: 27,
                                 )),

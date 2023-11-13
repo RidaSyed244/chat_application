@@ -23,6 +23,7 @@ class Users {
   final String? token;
   final String? profilePic;
   final phoneNumber;
+  final String status;
   Users({
     required this.email,
     required this.name,
@@ -31,6 +32,7 @@ class Users {
     required this.token,
     required this.profilePic,
     required this.phoneNumber,
+    required this.status,
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +43,8 @@ class Users {
       'uid': uid,
       'token': token,
       'profilePic': profilePic,
+      'status': status,
+      'phoneNumber': phoneNumber,
     };
   }
 
@@ -53,8 +57,8 @@ class Users {
       token: map['token'] != null ? map['token'] as String : null,
       profilePic:
           map['profilePic'] != null ? map['profilePic'] as String : null,
-      phoneNumber:
-          map['phoneNumber'] != null ? map['phoneNumber'] as String : null,
+      status: map['status'] as String,
+      phoneNumber: map['phoneNumber'] as String,
     );
   }
 
@@ -136,5 +140,6 @@ class Messages {
 
   String toJson() => json.encode(toMap());
 
-  factory Messages.fromJson(String source) => Messages.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Messages.fromJson(String source) =>
+      Messages.fromMap(json.decode(source) as Map<String, dynamic>);
 }

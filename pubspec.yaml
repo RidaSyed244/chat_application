@@ -55,6 +55,7 @@ dependencies:
   audioplayers: ^1.1.1
   flutter_sound: ^9.1.9
   intl: ^0.18.1
+  google_sign_in: ^6.1.5
 
 dev_dependencies:
   flutter_test:
