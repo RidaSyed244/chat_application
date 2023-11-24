@@ -7,9 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class AttachFiles {
   final List<AttachTiles> details;
@@ -107,10 +105,28 @@ class _MessagesState extends ConsumerState<MessageScreen> {
           ))
     ])
   ];
+  updateStatus() async {
+    await FirebaseFirestore.instance
+        .collection("Messages")
+        .where("SenderUid", isEqualTo: _auth)
+        .where("ReceiverUid", isEqualTo: widget.uid)
+        .where("status", isEqualTo: "Unread")
+        .get()
+        .then((value) {
+      value.docs.forEach((element) {
+        FirebaseFirestore.instance
+            .collection("Messages")
+            .doc(element.id)
+            .update({"status": "Read"});
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-
+    // Change status of messages to read from unread
+    updateStatus();
     // Listen to changes in the text field
     textEditingController.addListener(() {
       setState(() {
@@ -269,7 +285,7 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                                             color: Colors.grey,
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500));
-                                  }else{
+                                  } else {
                                     return Text("Offline",
                                         textAlign: TextAlign.left,
                                         style: TextStyle(

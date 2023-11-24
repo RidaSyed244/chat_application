@@ -1,7 +1,11 @@
+import 'package:chat_application/Contacts.dart';
 import 'package:chat_application/OnBoarding.dart';
 import 'package:chat_application/bottomNavigation.dart';
+import 'package:chat_application/pages/index.dart';
+import 'package:chat_application/searchContacts.dart';
 
 import 'package:chat_application/splashScreen.dart';
+import 'package:chat_application/uploadDP.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

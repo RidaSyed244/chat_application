@@ -12,26 +12,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
-void ChangeNotificationForChat(BuildContext context) async {
-  await FirebaseFirestore.instance
+Future<void> ChangeNotificationForChat(receiverUid) async {
+  QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore
+      .instance
       .collection("Messages")
       .where("SenderUid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-      .get()
-      .then((value) {
-    value.docs.forEach((element) {
-      FirebaseFirestore.instance
-          .collection("Messages")
-          .doc(element.id)
-          .update({"Notification": "True"});
-    });
-  });
+      .where("ReceiverUid", isEqualTo: receiverUid)
+      .get();
+
+  for (QueryDocumentSnapshot<Map<String, dynamic>> documentSnapshot
+      in querySnapshot.docs) {
+    String currentNotificationValue = documentSnapshot["Notification"];
+    String newNotificationValue =
+        currentNotificationValue == "True" ? "False" : "True";
+
+    await FirebaseFirestore.instance
+        .collection("Messages")
+        .doc(documentSnapshot.id)
+        .update({"Notification": newNotificationValue});
+  }
 }
 
-void DleteChat(BuildContext context) async {
+DleteChat(receiverUid) async {
   await FirebaseFirestore.instance
       .collection("Messages")
       .where("SenderUid", isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+      .where("ReceiverUid", isEqualTo: receiverUid)
       .get()
       .then((value) {
     value.docs.forEach((element) {
@@ -42,6 +50,7 @@ void DleteChat(BuildContext context) async {
     });
   });
 }
+
 void doNothing(BuildContext context) {}
 
 class Home extends ConsumerStatefulWidget {
@@ -66,6 +75,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
     });
   }
 
+  String? docid;
   Future<void> getUserData() async {
     final userData = await FirebaseFirestore.instance.collection("Users").get();
 
@@ -140,6 +150,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final allmessageUsers = ref.watch(alluserMessageStream);
+    final getLstMessage = ref.watch(getLastMessagesStream);
     return Scaffold(
       backgroundColor: Colors.black,
       resizeToAvoidBottomInset: true,
@@ -273,21 +284,46 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                       itemBuilder: (context, index) {
                         final singleUser = data.docs[index];
                         Users users = Users.fromMap(singleUser.data());
-
                         return Slidable(
                           key: ValueKey(0),
-                          endActionPane: const ActionPane(
+                          endActionPane: ActionPane(
                             motion: ScrollMotion(),
                             children: [
+                              StreamBuilder(
+                                  stream: FirebaseFirestore.instance
+                                      .collection("Messages")
+                                      .where("SenderUid",
+                                          isEqualTo: FirebaseAuth
+                                              .instance.currentUser?.uid)
+                                      .where("ReceiverUid",
+                                          isEqualTo: users.uid)
+                                      .where("Notification", isEqualTo: "True")
+                                      .snapshots(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return SlidableAction(
+                                          flex: 1,
+                                          onPressed: (BuildContext context) =>
+                                              ChangeNotificationForChat(
+                                                  users.uid),
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          icon: Icons.notifications);
+                                    } else {
+                                      return SlidableAction(
+                                        flex: 1,
+                                        onPressed: (BuildContext context) =>
+                                            ChangeNotificationForChat(
+                                                users.uid),
+                                        backgroundColor: Colors.black,
+                                        foregroundColor: Colors.white,
+                                        icon: Icons.notifications_off,
+                                      );
+                                    }
+                                  }),
                               SlidableAction(
-                                flex: 1,
-                                onPressed: doNothing,
-                                backgroundColor: Colors.black,
-                                foregroundColor: Colors.white,
-                                icon: Icons.notifications,
-                              ),
-                              SlidableAction(
-                                onPressed: doNothing,
+                                onPressed: (BuildContext context) =>
+                                    DleteChat(users.uid),
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
                                 icon: Icons.delete,
@@ -319,29 +355,29 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              // subtitle: getLstMessage.when(
-                              //   data: (messagesData) {
-                              //     if (messagesData.isNotEmpty &&
-                              //         index < messagesData.length) {
-                              //       return Text(
-                              //         '${messagesData[index].Message}',
-                              //         style: TextStyle(
-                              //           color: Colors.grey,
-                              //           fontSize: 15,
-                              //           fontWeight: FontWeight.w500,
-                              //         ),
-                              //       );
-                              //     } else {
-                              //       return Text("Start Conversation...");
-                              //     }
-                              //   },
-                              //   error: (e, s) {
-                              //     return Container();
-                              //   },
-                              //   loading: () => Center(
-                              //     child: CircularProgressIndicator(),
-                              //   ),
-                              // ),
+                              subtitle: getLstMessage.when(
+                                data: (messagesData) {
+                                  if (messagesData.isNotEmpty &&
+                                      index < messagesData.length) {
+                                    return Text(
+                                      '${messagesData[index].Message}',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    );
+                                  } else {
+                                    return Text("Start Conversation...");
+                                  }
+                                },
+                                error: (e, s) {
+                                  return Container();
+                                },
+                                loading: () => Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
                               leading: CircleAvatar(
                                 backgroundColor: Colors.white,
                                 radius: 28,
@@ -361,7 +397,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     // Green dot for online indicator
                                     Positioned(
                                       top: 36,
-                                      left: 35,
+                                      left: 45,
                                       child: StreamBuilder(
                                           stream: FirebaseFirestore.instance
                                               .collection("Users")
@@ -370,8 +406,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                           builder: (context, snapshot) {
                                             final status =
                                                 snapshot.data?["status"];
-                                            if (snapshot.hasData &&
-                                                status == "Online") {
+                                            if (snapshot.hasData) {
                                               return Container(
                                                 height: 12,
                                                 width: 12,
@@ -392,7 +427,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                                 width: 12,
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  color: Colors.transparent,
+                                                  color: Colors.grey,
                                                 ),
                                               );
                                             }
@@ -404,50 +439,78 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                               trailing: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  // getLstMessage.when(
-                                  //   data: (messagesData) {
-                                  //     if (messagesData.isNotEmpty &&
-                                  //         index < messagesData.length) {
-                                  //       final convertTime = DateFormat("h:mm a")
-                                  //           .format(messagesData[index]
-                                  //               .time
-                                  //               .toDate());
-                                  //       return Text(
-                                  //         "${convertTime}",
-                                  //         style: TextStyle(
-                                  //           color: Colors.black,
-                                  //           fontSize: 13,
-                                  //         ),
-                                  //       );
-                                  //     } else {
-                                  //       return Text("");
-                                  //     }
-                                  //   },
-                                  //   error: (e, s) {
-                                  //     return Container();
-                                  //   },
-                                  //   loading: () => Center(
-                                  //     child: CircularProgressIndicator(),
-                                  //   ),
-                                  // ),
-                                  SizedBox(height: 10),
-                                  Container(
-                                    height: 25,
-                                    width: 25,
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(50),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "2",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                        ),
-                                      ),
+                                  getLstMessage.when(
+                                    data: (messagesData) {
+                                      if (messagesData.isNotEmpty &&
+                                          index < messagesData.length) {
+                                        final convertTime = DateFormat("h:mm a")
+                                            .format(messagesData[index]
+                                                .time
+                                                .toDate());
+                                        return Text(
+                                          "${convertTime}",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 13,
+                                          ),
+                                        );
+                                      } else {
+                                        return Text("");
+                                      }
+                                    },
+                                    error: (e, s) {
+                                      return Container();
+                                    },
+                                    loading: () => Center(
+                                      child: CircularProgressIndicator(),
                                     ),
                                   ),
+                                  SizedBox(height: 10),
+                                  StreamBuilder(
+                                    stream: FirebaseFirestore.instance
+                                        .collection("Messages")
+                                        .where("SenderUid",
+                                            isEqualTo: FirebaseAuth
+                                                .instance.currentUser?.uid)
+                                        .where("ReceiverUid",
+                                            isEqualTo: users.uid)
+                                        .where("status", isEqualTo: "Unread")
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasError) {
+                                        return Text('');
+                                      }
+
+                                      int unreadCount =
+                                          snapshot.data?.docs.length ?? 0;
+                                      bool notifications = snapshot.hasData &&
+                                          snapshot.data!.docs.any((element) =>
+                                              element["Notification"] ==
+                                              "True");
+
+                                      return Container(
+                                        height: 25,
+                                        width: 25,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              notifications || unreadCount > 0
+                                                  ? Colors.red
+                                                  : Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(50),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "${snapshot.data?.docs.length ?? ''}",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  )
                                 ],
                               ),
                             ),
@@ -457,7 +520,7 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                     );
                   },
                   error: (e, s) {
-                    return Text("Error");
+                    return Text("");
                   },
                   loading: () => Center(
                     child: CircularProgressIndicator(),

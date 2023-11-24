@@ -51,6 +51,7 @@ class AddDataToDB extends StateNotifier {
       "FileMessage": "",
       "VideoMessage": "",
       "time": DateTime.now(),
+      "status": "Unread",
       "SenderName": currentUsername,
       "SenderProfilePic": currentprofilePic,
       "ReceiverName": receiversName,

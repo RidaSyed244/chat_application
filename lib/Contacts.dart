@@ -160,16 +160,19 @@ class _ContactsState extends ConsumerState<Contacts> {
                         // This contact did not match any registered user, so display it.
                         contactWidgets.add(
                           ListTile(
-                            trailing: CircleAvatar(
-                              backgroundColor: Colors.green,
-                              radius: 25,
-                              child: Center(
-                                child: Text("Invite",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                    )),
+                            trailing: GestureDetector(
+                              onTap: () {},
+                              child: CircleAvatar(
+                                backgroundColor: Colors.green,
+                                radius: 25,
+                                child: Center(
+                                  child: Text("Invite",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      )),
+                                ),
                               ),
                             ),
                             leading: CircleAvatar(

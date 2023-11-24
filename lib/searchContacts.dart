@@ -114,7 +114,7 @@ class _SearchContactsState extends ConsumerState<SearchContacts> {
               }, error: (error, stackTrace) {
                 return Text(error.toString());
               }, loading: () {
-                return CircularProgressIndicator();
+                return Center(child: CircularProgressIndicator());
               })),
             if (searchContact.isNotEmpty)
               Expanded(
@@ -146,7 +146,7 @@ class _SearchContactsState extends ConsumerState<SearchContacts> {
               }, error: (error, stackTrace) {
                 return Text(error.toString());
               }, loading: () {
-                return CircularProgressIndicator();
+                return Center(child: CircularProgressIndicator());
               })),
           ],
         ),

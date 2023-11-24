@@ -92,7 +92,7 @@ class Story {
 ////////////// Messages Fetching /////////////////////
 class Messages {
   final time;
-
+  final String status;
   final String Message;
   final String ReceiverName;
   final String ReceiverProfilePic;
@@ -102,6 +102,7 @@ class Messages {
   final String SenderUid;
 
   Messages({
+    required this.status,
     required this.time,
     required this.Message,
     required this.ReceiverName,
@@ -114,6 +115,7 @@ class Messages {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'status': status,
       'Message': Message,
       'ReceiverName': ReceiverName,
       'ReceiverProfilePic': ReceiverProfilePic,
@@ -127,6 +129,7 @@ class Messages {
 
   factory Messages.fromMap(Map<String, dynamic> map) {
     return Messages(
+      status: map['status'] as String,
       Message: map['Message'] as String,
       ReceiverName: map['ReceiverName'] as String,
       ReceiverProfilePic: map['ReceiverProfilePic'] as String,
@@ -140,6 +143,5 @@ class Messages {
 
   String toJson() => json.encode(toMap());
 
-  factory Messages.fromJson(String source) =>
-      Messages.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Messages.fromJson(String source) => Messages.fromMap(json.decode(source) as Map<String, dynamic>);
 }

@@ -83,56 +83,27 @@ class _UploadDPState extends ConsumerState<UploadDP> {
                 child: CircleAvatar(
                   radius: 80,
                   backgroundColor: Colors.grey,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 80,
-                        left: 140,
-                        child: GestureDetector(
-                          onTap: () {
-                            showpicker();
-                          },
-                          child: CircleAvatar(
-                            backgroundColor: Colors.white,
-                            radius: 20,
-                            child: Center(
-                              child: Icon(
-                                Icons.camera_alt,
-                                color: Colors.black,
-                                size: 17,
-                              ),
-                            ),
-                          ),
-                        ),
+                  child: CircleAvatar(
+                    radius: 75,
+                    backgroundImage: data.profilePic != null
+                        ? NetworkImage(data.profilePic.toString())
+                        : null,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 35,
                       ),
-                      CircleAvatar(
-                        radius: 75,
-                        backgroundColor: Colors.grey,
-                        child: data.profilePic == null
-                            ? Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.black,
-                                    borderRadius: BorderRadius.circular(70)),
-                                width: 135,
-                                height: 135,
-                                // child: IconButton(
-                                //   icon: Icon(
-                                //     Icons.camera_alt,
-                                //     color: Colors.white,
-                                //     size: 35,
-                                //   ),
-                                //   onPressed: () {
-                                // showpicker();
-                                //   },
-                                // ),
-                              )
-                            : CircleAvatar(
-                                radius: 75,
-                                backgroundImage:
-                                    NetworkImage(data.profilePic.toString()),
-                              ),
-                      ),
-                    ],
+                      onPressed: () {
+                        showpicker();
+                      },
+                    ),
+
+                    // : CircleAvatar(
+                    //     radius: 75,
+                    //     backgroundImage:
+                    //         NetworkImage(data.profilePic.toString()),
+                    //   ),
                   ),
                 ),
               ),
