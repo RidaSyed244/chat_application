@@ -137,7 +137,7 @@ class Messages {
       SenderName: map['SenderName'] as String,
       SenderProfilePic: map['SenderProfilePic'] as String,
       SenderUid: map['SenderUid'] as String,
-      time: map['time'] as Timestamp,
+      time: map['time'] ,
     );
   }
 

@@ -324,12 +324,30 @@ class _MessagesState extends ConsumerState<MessageScreen> {
             messages.when(data: (data) {
               final messages = data.map((e) => e.toMap()).toList().reversed;
               List<Messagebubble> messageBubbles = [];
+
               for (var message in messages) {
                 final messageText = message['Message'];
-                final messageTime = message["time"];
+                final messageTime = (message["time"] as Timestamp).toDate();
+                final messageDay = message["MessageDay"];
+
                 //Show time like this 09: 44
-                final convertTime =
-                    DateFormat("h:mm a").format(messageTime.toDate());
+                final convertTime = DateFormat("h:mm a").format(messageTime);
+                final today = DateTime.now();
+                final yesterday = today.subtract(Duration(days: 1));
+
+                print("Message Day: $messageDay");
+                print("Today: $today");
+                print("Yesterday: $yesterday");
+
+                final isToday = messageTime.year == today.year &&
+                    messageTime.month == today.month &&
+                    messageTime.day == today.day;
+                final isYesterday = messageTime.year == yesterday.year &&
+                    messageTime.month == yesterday.month &&
+                    messageTime.day == yesterday.day;
+
+                print("Is Today: $isToday");
+                print("Is Yesterday: $isYesterday");
 
                 final sendertext = message['SenderUid'];
                 final receiverMessages = message['ReceiverUid'];
@@ -339,6 +357,8 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                 final messageBubble = Messagebubble(
                   receiver: receiverMessages,
                   receiverDp: receiverDp,
+                  isToday: isToday,
+                  isYesterday: isYesterday,
                   messageTime: convertTime,
                   text: messageText,
                   senderName: senderName,
@@ -346,8 +366,7 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                   sender: sendertext,
                   isMe: _auth == sendertext,
                 );
-                // messageBubbles.add(messageBubble);
-                // To  separate messages between two users
+
                 if (widget.uid == message["SenderUid"] &&
                         _auth == message["ReceiverUid"] ||
                     widget.uid == message["ReceiverUid"] &&
@@ -573,8 +592,6 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                                         .sendMessages(widget.uid, widget.name,
                                             widget.profilePic);
                                     textEditingController.clear();
-
-                                    Navigator.pop(context);
                                   } catch (e) {
                                     print(e);
                                   }
@@ -620,10 +637,35 @@ class _MessagesState extends ConsumerState<MessageScreen> {
   }
 }
 
+// class DateHeader extends StatelessWidget {
+//   final String date;
+//   final messageTime; // Add this line
+
+//   DateHeader({required this.date, required this.messageTime}); // Add this line
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       alignment: Alignment.center,
+//       padding: EdgeInsets.symmetric(vertical: 8),
+//       color: Colors.grey[300],
+//       child: Text(
+//         date,
+//         style: TextStyle(
+//           fontWeight: FontWeight.bold,
+//           color: Colors.black,
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class Messagebubble extends ConsumerWidget {
   Messagebubble(
       {required this.sender,
       required this.receiver,
+      required this.isToday,
+      required this.isYesterday,
       required this.text,
       required this.receiverName,
       required this.senderName,
@@ -634,6 +676,8 @@ class Messagebubble extends ConsumerWidget {
   final String text;
   final String sender;
   final messageTime;
+  final isToday;
+  final isYesterday;
   final bool isMe;
   final String receiverDp;
   final String receiverName;
@@ -644,12 +688,52 @@ class Messagebubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: isMe
-          ? EdgeInsets.fromLTRB(90, 0, 10, 0)
-          : EdgeInsets.fromLTRB(10, 0, 90, 0),
+          ? EdgeInsets.fromLTRB(50, 0, 10, 0)
+          : EdgeInsets.fromLTRB(10, 0, 50, 0),
       child: Column(
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
+            if (isToday)
+              // Add "Today" header if not added yet
+
+              Container(
+                alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(vertical: 8),
+                color: Colors.pink,
+                child: Text(
+                  "Today",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            if (isYesterday)
+              // Add "Yesterday" header if not added yet
+              Container(
+                height: 100,
+                alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(vertical: 8),
+                color: Colors.pink,
+                child: Text(
+                  "Yesterday",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            if (!isToday && !isYesterday)
+              // Add date header if not added yet
+              Center(child: Text("Not Added")),
+            // DateHeader(
+            //     date: DateFormat('MMMM d, yyyy').format(messageTime),
+            //     messageTime: messageTime) as Messagebubble,
+            SizedBox(
+              height: 10,
+            ),
+
             Row(
               children: [
                 isMe

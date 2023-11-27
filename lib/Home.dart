@@ -466,51 +466,49 @@ class _HomeState extends ConsumerState<Home> with WidgetsBindingObserver {
                                     ),
                                   ),
                                   SizedBox(height: 10),
-                                  StreamBuilder(
-                                    stream: FirebaseFirestore.instance
-                                        .collection("Messages")
-                                        .where("SenderUid",
-                                            isEqualTo: FirebaseAuth
-                                                .instance.currentUser?.uid)
-                                        .where("ReceiverUid",
-                                            isEqualTo: users.uid)
-                                        .where("status", isEqualTo: "Unread")
-                                        .snapshots(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasError) {
-                                        return Text('');
-                                      }
+                                  // StreamBuilder(
+                                  //   stream: FirebaseFirestore.instance
+                                  //       .collection("Messages")
+                                  //       .where("SenderUid",
+                                  //           isNotEqualTo: FirebaseAuth
+                                  //               .instance.currentUser?.uid)
+                                  //       .where("status", isEqualTo: "Unread")
+                                  //       .snapshots(),
+                                  //   builder: (context, snapshot) {
+                                  //     if (snapshot.hasError) {
+                                  //       return Text('');
+                                  //     }
 
-                                      int unreadCount =
-                                          snapshot.data?.docs.length ?? 0;
-                                      bool notifications = snapshot.hasData &&
-                                          snapshot.data!.docs.any((element) =>
-                                              element["Notification"] ==
-                                              "True");
+                                  //     int unreadCount =
+                                  //         snapshot.data?.docs.length ?? 0;
+                                  //     bool notifications = snapshot.hasData &&
+                                  //         snapshot.data!.docs.any((element) =>
+                                  //             element["Notification"] ==
+                                  //             "True");
 
-                                      return Container(
-                                        height: 25,
-                                        width: 25,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              notifications || unreadCount > 0
-                                                  ? Colors.red
-                                                  : Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(50),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            "${snapshot.data?.docs.length ?? ''}",
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  )
+                                  //     return Container(
+                                  //       height: 25,
+                                  //       width: 25,
+                                  //       decoration: BoxDecoration(
+                                  //         color:
+                                  //             notifications || unreadCount > 0
+                                  //                 ? Colors.red
+                                  //                 : Colors.white,
+                                  //         borderRadius:
+                                  //             BorderRadius.circular(50),
+                                  //       ),
+                                  //       child: Center(
+                                  //         child: Text(
+                                  //           "${snapshot.data?.docs.length ?? ''}",
+                                  //           style: TextStyle(
+                                  //             color: Colors.white,
+                                  //             fontSize: 13,
+                                  //           ),
+                                  //         ),
+                                  //       ),
+                                  //     );
+                                  //   },
+                                  // )
                                 ],
                               ),
                             ),
