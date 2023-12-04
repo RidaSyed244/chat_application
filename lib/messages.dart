@@ -1,5 +1,4 @@
 // ignore_for_file: unused_field
-import 'package:chat_application/FetchData.dart';
 import 'package:chat_application/SendDataToDB.dart';
 import 'package:chat_application/UserProfile.dart';
 import 'package:chat_application/users.dart';
@@ -322,22 +321,17 @@ class _MessagesState extends ConsumerState<MessageScreen> {
               ),
             ),
             messages.when(data: (data) {
-              final messages = data.map((e) => e.toMap()).toList().reversed;
-              List<Messagebubble> messageBubbles = [];
+              final messages = data.map((e) => e.toMap()).toList();
+
+              Map<String, List<Messagebubble>> groupedMessages = {};
 
               for (var message in messages) {
                 final messageText = message['Message'];
                 final messageTime = (message["time"] as Timestamp).toDate();
-                final messageDay = message["MessageDay"];
 
-                //Show time like this 09: 44
                 final convertTime = DateFormat("h:mm a").format(messageTime);
                 final today = DateTime.now();
                 final yesterday = today.subtract(Duration(days: 1));
-
-                print("Message Day: $messageDay");
-                print("Today: $today");
-                print("Yesterday: $yesterday");
 
                 final isToday = messageTime.year == today.year &&
                     messageTime.month == today.month &&
@@ -346,8 +340,7 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                     messageTime.month == yesterday.month &&
                     messageTime.day == yesterday.day;
 
-                print("Is Today: $isToday");
-                print("Is Yesterday: $isYesterday");
+                final dateOfMsg = DateFormat("d MMMM").format(messageTime);
 
                 final sendertext = message['SenderUid'];
                 final receiverMessages = message['ReceiverUid'];
@@ -357,8 +350,6 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                 final messageBubble = Messagebubble(
                   receiver: receiverMessages,
                   receiverDp: receiverDp,
-                  isToday: isToday,
-                  isYesterday: isYesterday,
                   messageTime: convertTime,
                   text: messageText,
                   senderName: senderName,
@@ -371,13 +362,41 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                         _auth == message["ReceiverUid"] ||
                     widget.uid == message["ReceiverUid"] &&
                         _auth == message["SenderUid"]) {
-                  messageBubbles.add(messageBubble);
+                  // Group messages by date
+                  final groupKey = isToday
+                      ? 'Today'
+                      : isYesterday
+                          ? 'Yesterday'
+                          : dateOfMsg;
+
+                  groupedMessages.putIfAbsent(groupKey, () => []);
+                  groupedMessages[groupKey]!.add(messageBubble);
                 }
               }
+
+              // Generate widgets for each group
+              List<Widget> messageGroups = [];
+              groupedMessages.forEach((date, messages) {
+                messageGroups.add(
+                  Column(
+                    children: [
+                      Text(
+                        date,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      ...messages,
+                    ],
+                  ),
+                );
+              });
+
               return Expanded(
                 child: ListView(
-                  children: messageBubbles,
-                  reverse: true,
+                  children: messageGroups,
+                  // reverse: true,
                   padding: EdgeInsets.symmetric(
                     horizontal: 10.0,
                     vertical: 20.0,
@@ -637,35 +656,10 @@ class _MessagesState extends ConsumerState<MessageScreen> {
   }
 }
 
-// class DateHeader extends StatelessWidget {
-//   final String date;
-//   final messageTime; // Add this line
-
-//   DateHeader({required this.date, required this.messageTime}); // Add this line
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       alignment: Alignment.center,
-//       padding: EdgeInsets.symmetric(vertical: 8),
-//       color: Colors.grey[300],
-//       child: Text(
-//         date,
-//         style: TextStyle(
-//           fontWeight: FontWeight.bold,
-//           color: Colors.black,
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 class Messagebubble extends ConsumerWidget {
   Messagebubble(
       {required this.sender,
       required this.receiver,
-      required this.isToday,
-      required this.isYesterday,
       required this.text,
       required this.receiverName,
       required this.senderName,
@@ -676,8 +670,7 @@ class Messagebubble extends ConsumerWidget {
   final String text;
   final String sender;
   final messageTime;
-  final isToday;
-  final isYesterday;
+
   final bool isMe;
   final String receiverDp;
   final String receiverName;
@@ -694,46 +687,6 @@ class Messagebubble extends ConsumerWidget {
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            if (isToday)
-              // Add "Today" header if not added yet
-
-              Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(vertical: 8),
-                color: Colors.pink,
-                child: Text(
-                  "Today",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            if (isYesterday)
-              // Add "Yesterday" header if not added yet
-              Container(
-                height: 100,
-                alignment: Alignment.center,
-                padding: EdgeInsets.symmetric(vertical: 8),
-                color: Colors.pink,
-                child: Text(
-                  "Yesterday",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            if (!isToday && !isYesterday)
-              // Add date header if not added yet
-              Center(child: Text("Not Added")),
-            // DateHeader(
-            //     date: DateFormat('MMMM d, yyyy').format(messageTime),
-            //     messageTime: messageTime) as Messagebubble,
-            SizedBox(
-              height: 10,
-            ),
-
             Row(
               children: [
                 isMe
