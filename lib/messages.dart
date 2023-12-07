@@ -1,18 +1,29 @@
-// ignore_for_file: unused_field
+// ignore_for_file: unused_field, unused_local_variable
+import 'dart:io';
+
+import 'package:chat_application/FetchData.dart';
 import 'package:chat_application/SendDataToDB.dart';
+import 'package:chat_application/SendImages.dart';
 import 'package:chat_application/UserProfile.dart';
+import 'package:chat_application/allMessages.dart';
+import 'package:chat_application/messageBubbles.dart';
 import 'package:chat_application/users.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:multiple_images_picker/multiple_images_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:path/path.dart';
 
 class AttachFiles {
   final List<AttachTiles> details;
   final String title;
+  final Function()? onPressed; // Callback function
 
-  AttachFiles({required this.title, required this.details});
+  AttachFiles({required this.title, required this.details, this.onPressed});
 }
 
 class AttachTiles {
@@ -26,13 +37,16 @@ class AttachTiles {
 }
 
 class MessageScreen extends ConsumerStatefulWidget {
-  MessageScreen(
-      {required this.uid,
-      this.message,
-      required this.name,
-      required this.profilePic,
-      required this.email,
-      required this.phoneNumber});
+  MessageScreen({
+    Key? key,
+    required this.uid,
+    this.message,
+    required this.name,
+    required this.profilePic,
+    required this.email,
+    required this.phoneNumber,
+  }) : super(key: key);
+
   final String uid;
   final String name;
   final String? message;
@@ -48,8 +62,9 @@ class _MessagesState extends ConsumerState<MessageScreen> {
   bool _isTyping = false;
   final _auth = FirebaseAuth.instance.currentUser?.uid;
   // final recorder = FlutterSoundRecorder();
+
   List<AttachFiles> tiles = [
-    AttachFiles(title: "Camera", details: [
+    AttachFiles(onPressed: () async {}, title: "Camera", details: [
       AttachTiles(
           description: "",
           icon: Icon(
@@ -156,10 +171,47 @@ class _MessagesState extends ConsumerState<MessageScreen> {
   //   recorder.closeRecorder();
   //   super.dispose();
   // }
+  List<Asset> images = <Asset>[];
+  String _error = 'No Error Detected';
+
+  Future<void> loadAssets() async {
+    List<Asset> resultList = <Asset>[];
+    String error = 'No Error Detected';
+
+    try {
+      resultList = await MultipleImagesPicker.pickImages(
+        maxImages: 30,
+        enableCamera: true,
+        selectedAssets: images,
+        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: MaterialOptions(
+          actionBarColor: "#000000",
+          actionBarTitle: "ChatBox",
+          allViewTitle: "All Photos",
+          useDetailsView: false,
+          selectCircleStrokeColor: "#000000",
+        ),
+      );
+      // send images to database
+      List<String> imageUrls =
+          await ref.read(signup.notifier).uploadImageMessages(images);
+      await ref.read(signup.notifier).saveImagesToFirestore(
+          widget.uid, widget.name, widget.profilePic, imageUrls);
+      print("Send image Message Successfully!");
+    } on Exception catch (e) {
+      error = e.toString();
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      images = resultList;
+      _error = error;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(getAllMessagesStream);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -320,94 +372,9 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                 ),
               ),
             ),
-            messages.when(data: (data) {
-              final messages = data.map((e) => e.toMap()).toList();
-
-              Map<String, List<Messagebubble>> groupedMessages = {};
-
-              for (var message in messages) {
-                final messageText = message['Message'];
-                final messageTime = (message["time"] as Timestamp).toDate();
-
-                final convertTime = DateFormat("h:mm a").format(messageTime);
-                final today = DateTime.now();
-                final yesterday = today.subtract(Duration(days: 1));
-
-                final isToday = messageTime.year == today.year &&
-                    messageTime.month == today.month &&
-                    messageTime.day == today.day;
-                final isYesterday = messageTime.year == yesterday.year &&
-                    messageTime.month == yesterday.month &&
-                    messageTime.day == yesterday.day;
-
-                final dateOfMsg = DateFormat("d MMMM").format(messageTime);
-
-                final sendertext = message['SenderUid'];
-                final receiverMessages = message['ReceiverUid'];
-                final senderName = message['SenderName'];
-                final receiverName = message['ReceiverName'];
-                final receiverDp = message['SenderProfilePic'];
-                final messageBubble = Messagebubble(
-                  receiver: receiverMessages,
-                  receiverDp: receiverDp,
-                  messageTime: convertTime,
-                  text: messageText,
-                  senderName: senderName,
-                  receiverName: receiverName,
-                  sender: sendertext,
-                  isMe: _auth == sendertext,
-                );
-
-                if (widget.uid == message["SenderUid"] &&
-                        _auth == message["ReceiverUid"] ||
-                    widget.uid == message["ReceiverUid"] &&
-                        _auth == message["SenderUid"]) {
-                  // Group messages by date
-                  final groupKey = isToday
-                      ? 'Today'
-                      : isYesterday
-                          ? 'Yesterday'
-                          : dateOfMsg;
-
-                  groupedMessages.putIfAbsent(groupKey, () => []);
-                  groupedMessages[groupKey]!.add(messageBubble);
-                }
-              }
-
-              // Generate widgets for each group
-              List<Widget> messageGroups = [];
-              groupedMessages.forEach((date, messages) {
-                messageGroups.add(
-                  Column(
-                    children: [
-                      Text(
-                        date,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      ...messages,
-                    ],
-                  ),
-                );
-              });
-
-              return Expanded(
-                child: ListView(
-                  children: messageGroups,
-                  // reverse: true,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.0,
-                    vertical: 20.0,
-                  ),
-                ),
-              );
-            }, error: (e, s) {
-              return Text("${e}");
-            }, loading: () {
-              return Center(child: CircularProgressIndicator());
-            }),
+            AllMessages(
+              uid: widget.uid,
+            ),
             Container(
               padding: EdgeInsets.all(3),
               height: 100,
@@ -470,6 +437,74 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                                           return Padding(
                                             padding: const EdgeInsets.all(10.0),
                                             child: ListTile(
+                                              onTap: () async {
+                                                if (det.title == "Camera") {
+                                                  final ImagePicker _picker =
+                                                      ImagePicker();
+                                                  final pickedFile =
+                                                      await _picker.pickImage(
+                                                          source: ImageSource
+                                                              .camera);
+
+                                                  if (pickedFile != null) {
+                                                    photo =
+                                                        File(pickedFile.path);
+
+                                                    if (photo == null) return;
+
+                                                    final fileName =
+                                                        basename(photo!.path);
+                                                    final destination =
+                                                        'AttachFileOfCamera/$fileName';
+
+                                                    try {
+                                                      final ref =
+                                                          firebase_storage
+                                                              .FirebaseStorage
+                                                              .instance
+                                                              .ref(destination)
+                                                              .child('file');
+                                                      await ref.putFile(photo!);
+                                                      final url = await ref
+                                                          .getDownloadURL();
+
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection(
+                                                              "Messages")
+                                                          .add({
+                                                        "Message": '',
+                                                        "VoiceMessage": "",
+                                                        "ImageMessage": url,
+                                                        "FileMessage": "",
+                                                        "VideoMessage": "",
+                                                        "Notification": "True",
+                                                        "time": DateTime.now(),
+                                                        "status": "Unread",
+                                                        "SenderName":
+                                                            currentUsername,
+                                                        "SenderProfilePic":
+                                                            currentprofilePic,
+                                                        "ReceiverName":
+                                                            widget.name,
+                                                        "ReceiverProfilePic":
+                                                            widget.profilePic,
+                                                        "SenderUid":
+                                                            FirebaseAuth
+                                                                .instance
+                                                                .currentUser
+                                                                ?.uid,
+                                                        "ReceiverUid":
+                                                            widget.uid,
+                                                      });
+                                                    } catch (e) {
+                                                      print('error occurred');
+                                                    }
+                                                  } else {
+                                                    print('No image selected.');
+                                                  }
+                                                }
+                                              },
                                               title: Text(
                                                 "${det.title}",
                                                 style: TextStyle(
@@ -624,7 +659,7 @@ class _MessagesState extends ConsumerState<MessageScreen> {
                       : Row(
                           children: [
                             IconButton(
-                                onPressed: () {},
+                                onPressed: loadAssets,
                                 icon: Icon(
                                   Icons.camera_alt_outlined,
                                   color: const Color.fromARGB(255, 60, 60, 60),
@@ -652,106 +687,6 @@ class _MessagesState extends ConsumerState<MessageScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class Messagebubble extends ConsumerWidget {
-  Messagebubble(
-      {required this.sender,
-      required this.receiver,
-      required this.text,
-      required this.receiverName,
-      required this.senderName,
-      required this.messageTime,
-      required this.receiverDp,
-      this.time,
-      required this.isMe});
-  final String text;
-  final String sender;
-  final messageTime;
-
-  final bool isMe;
-  final String receiverDp;
-  final String receiverName;
-  final String senderName;
-  final time;
-  final String receiver;
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: isMe
-          ? EdgeInsets.fromLTRB(50, 0, 10, 0)
-          : EdgeInsets.fromLTRB(10, 0, 50, 0),
-      child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                isMe
-                    ? Text('')
-                    : CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(receiverDp),
-                      ),
-                SizedBox(
-                  width: 10,
-                ),
-                isMe
-                    ? Text('')
-                    : Text(
-                        "${senderName}",
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold),
-                      ),
-              ],
-            ),
-            // SizedBox(
-            //   height: 10,
-            // ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(50, 0, 0, 0),
-              child: Material(
-                // elevation: 3.0,
-                borderRadius: isMe
-                    ? BorderRadius.only(
-                        topLeft: Radius.circular(30.0),
-                        bottomLeft: Radius.circular(30.0),
-                        bottomRight: Radius.circular(30.0))
-                    : BorderRadius.only(
-                        bottomLeft: Radius.circular(30.0),
-                        bottomRight: Radius.circular(30.0),
-                        topRight: Radius.circular(30.0)),
-                color: isMe
-                    ? Color.fromARGB(255, 41, 175, 162)
-                    : Color.fromARGB(255, 248, 245, 245),
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black,
-                      fontSize: 15.0,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Column(
-              crossAxisAlignment:
-                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.center,
-              children: [
-                Text(
-                  messageTime,
-                  style: TextStyle(fontSize: 12.0, color: Colors.grey),
-                ),
-              ],
-            ),
-          ]),
     );
   }
 }

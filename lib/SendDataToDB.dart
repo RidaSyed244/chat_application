@@ -1,7 +1,8 @@
-// ignore_for_file: unused_local_variable
+// ignore_for_file: unused_local_variable, unused_element
 
 import 'dart:io' as io;
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:chat_application/FetchData.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multiple_images_picker/multiple_images_picker.dart';
 import 'package:path/path.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
@@ -50,9 +52,6 @@ class AddDataToDB extends StateNotifier {
       "ImageMessage": "",
       "FileMessage": "",
       "VideoMessage": "",
-      "MessageDay": DateTime.now().day,
-      "MessageMonth": DateTime.now().month,
-      "MessageYear": DateTime.now().year,
       "Notification": "True",
       "time": DateTime.now(),
       "status": "Unread",
@@ -63,6 +62,84 @@ class AddDataToDB extends StateNotifier {
       "SenderUid": FirebaseAuth.instance.currentUser?.uid,
       "ReceiverUid": receiversUid,
     });
+  }
+Future imgFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      photo = File(pickedFile.path);
+      // uploadFile();
+    } else {
+      print('No image selected.');
+    }
+  }
+
+  Future<List<String>> uploadImageMessages(List<Asset> images) async {
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    final firebase_storage.FirebaseStorage _storage =
+        firebase_storage.FirebaseStorage.instance;
+    List<String> imageUrls = [];
+
+    for (var image in images) {
+      try {
+        // Convert Asset to ByteData
+        ByteData byteData = await image.getByteData();
+        List<int> imageData = byteData.buffer.asUint8List();
+
+        // Generate a unique filename
+        String filename = DateTime.now().toIso8601String();
+
+        // Create a reference to the image in Firebase Storage
+        final firebase_storage.Reference storageRef =
+            _storage.ref().child('imageMessagess/$filename.jpg');
+
+        // Upload image to Firebase Storage
+        await storageRef.putData(imageData as Uint8List);
+
+        // Get the download URL of the uploaded image
+        final String downloadURL = await storageRef.getDownloadURL();
+
+        // Save the download URL in a list
+        imageUrls.add(downloadURL);
+      } catch (e) {
+        print('Error uploading image: $e');
+        // Handle error
+      }
+    }
+
+    return imageUrls;
+  }
+
+  Future saveImagesToFirestore(
+      receiversUid, receiversName, reciversDp, List<String> imageUrls) async {
+    try {
+      // Create a reference to the Firestore collection where image URLs will be stored
+      final imagesCollection =
+          FirebaseFirestore.instance.collection("Messages");
+
+      // Save the download URLs in Firestore
+      for (var url in imageUrls) {
+        await imagesCollection.add({
+          "Message": '',
+          "VoiceMessage": "",
+          "ImageMessage": url,
+          "FileMessage": "",
+          "VideoMessage": "",
+          "Notification": "True",
+          "time": DateTime.now(),
+          "status": "Unread",
+          "SenderName": currentUsername,
+          "SenderProfilePic": currentprofilePic,
+          "ReceiverName": receiversName,
+          "ReceiverProfilePic": reciversDp,
+          "SenderUid": FirebaseAuth.instance.currentUser?.uid,
+          "ReceiverUid": receiversUid,
+        });
+      }
+    } catch (e) {
+      print('Error saving images to Firestore: $e');
+      // Handle error
+    }
   }
 
   Future RegisterUserIndo() async {
